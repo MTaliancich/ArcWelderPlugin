@@ -4,7 +4,7 @@
 // Compresses many G0/G1 commands into G2/G3(arc) commands where possible, ensuring the tool paths stay within the specified resolution.
 // This reduces file size and the number of gcodes per second.
 //
-// Copyright(C) 2020 - Brad Hochgesang
+// Copyright(C) 2021 - Brad Hochgesang
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This program is free software : you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -28,6 +28,7 @@
 #include "arc_welder.h"
 #include "py_logger.h"
 #include "python_helpers.h"
+#include "version.h"
 
 #if PY_MAJOR_VERSION >= 3
 int main(int argc, char* argv[])
@@ -47,10 +48,10 @@ int main(int argc, char* argv[])
 	// Initialize the Python interpreter.  Required.
 	Py_Initialize();
 	// We are not using threads, do not enable.
-	/*std::cout << "Initializing threads...";
-	if (!PyEval_ThreadsInitialized()) {
-		PyEval_InitThreads();
-	}*/
+	//std::cout << "Initializing threads...";
+	//if (!PyEval_ThreadsInitialized()) {
+	//	PyEval_InitThreads();
+	//}
 	// Optionally import the module; alternatively, import can be deferred until the embedded script imports it.
 	PyImport_ImportModule("PyArcWelder");
 	PyMem_RawFree(program);
@@ -88,6 +89,7 @@ static struct module_state _state;
 // Python 2 module method definition
 static PyMethodDef PyArcWelderMethods[] = {
 	{ "ConvertFile", (PyCFunction)ConvertFile,  METH_VARARGS  ,"Converts segmented curve approximations to actual G2/G3 arcs within the supplied resolution." },
+	{ "GetVersionInfo", (PyCFunction)GetVersionInfo, METH_NOARGS, "Gets a version information dictionary."},
 	{ NULL, NULL, 0, NULL }
 };
 
@@ -126,8 +128,23 @@ PyInit_PyArcWelder(void)
 extern "C" void initPyArcWelder(void)
 #endif
 {
-	std::cout << "Initializing PyArcWelder V0.1.0rc1.dev2 - Copyright (C) 2019  Brad Hochgesang.";
+	std::vector<std::string> logger_names;
+	logger_names.push_back("arc_welder.gcode_conversion");
+	std::vector<int> logger_levels;
+	logger_levels.push_back(log_levels::NOSET);
+	logger_levels.push_back(log_levels::VERBOSE);
+	logger_levels.push_back(log_levels::DEBUG);
+	logger_levels.push_back(log_levels::INFO);
+	logger_levels.push_back(log_levels::WARNING);
+	logger_levels.push_back(log_levels::ERROR);
+	logger_levels.push_back(log_levels::CRITICAL);
+	p_py_logger = new py_logger(logger_names, logger_levels);
+	p_py_logger->initialize_loggers();
+	p_py_logger->set_log_level(INFO);
 
+	std::string comment_start = "; ";
+	
+	std::cout << "Initializing " << py_version.get_version_info_string() << "\n";
 #if PY_MAJOR_VERSION >= 3
 	std::cout << " Python 3+ Detected...";
 	PyObject* module = PyModule_Create(&moduledef);
@@ -145,15 +162,7 @@ extern "C" void initPyArcWelder(void)
 		Py_DECREF(module);
 		INITERROR;
 	}
-	std::vector<std::string> logger_names;
-	logger_names.push_back("arc_welder.gcode_conversion");
-	std::vector<int> logger_levels;
-	logger_levels.push_back(log_levels::DEBUG);
-	p_py_logger = new py_logger(logger_names, logger_levels);
-	p_py_logger->initialize_loggers();
-	std::string message = "PyArcWelder V0.1.0rc1.dev2 imported - Copyright (C) 2019  Brad Hochgesang...";
-	p_py_logger->log(GCODE_CONVERSION, INFO, message);
-	p_py_logger->set_log_level_by_value(DEBUG);
+	
 	std::cout << " Initialization Complete\r\n";
 
 #if PY_MAJOR_VERSION >= 3
@@ -180,32 +189,38 @@ extern "C"
 		py_gcode_arc_args args;
 		PyObject* py_progress_callback = NULL;
 		
-		if (!ParseArgs(py_convert_file_args, args, &py_progress_callback))
+		if (!py_gcode_arc_args::parse_args(py_convert_file_args, p_py_logger, args, &py_progress_callback))
 		{
 			return NULL;
 		}
-		p_py_logger->set_log_level_by_value(args.log_level);
-		
+		p_py_logger->set_log_level((log_levels)args.log_level);
 
 		std::string message = "py_gcode_arc_converter.ConvertFile - Beginning Arc Conversion.";
-		p_py_logger->log(GCODE_CONVERSION, INFO, message);
+		p_py_logger->log(GCODE_CONVERSION, log_levels::INFO, message);
 
-		py_arc_welder arc_welder_obj(args.source_file_path, args.target_file_path, p_py_logger, args.resolution_mm, args.max_radius_mm, args.g90_g91_influences_extruder, 50, py_progress_callback);
-		arc_welder_results results = arc_welder_obj.process();
+		args.py_progress_callback = py_progress_callback;
+		args.log = p_py_logger;
+		// Set the encoding to html for the progress output
+		args.box_encoding = utilities::box_drawing::HTML;
+		py_arc_welder arc_welder_obj(args);
+		arc_welder_results results;
+		results = arc_welder_obj.process();
+		
 		message = "py_gcode_arc_converter.ConvertFile - Arc Conversion Complete.";
-		p_py_logger->log(GCODE_CONVERSION, INFO, message);
+		p_py_logger->log(GCODE_CONVERSION, log_levels::INFO, message);
 		Py_XDECREF(py_progress_callback);
 		// return the arguments
-		PyObject* p_progress = py_arc_welder::build_py_progress(results.progress);
+		PyObject* p_progress = py_arc_welder::build_py_progress(results.progress, args.guid, true);
+		
 		if (p_progress == NULL)
 			p_progress = Py_None;
 
 		PyObject* p_results = Py_BuildValue(
 			"{s:i,s:i,s:s,s:O}",
 			"success",
-			results.success,
-			"cancelled",
-			results.cancelled,
+			(long int)(results.success ? 1 : 0),
+			"is_cancelled",
+			(long int)(results.cancelled ? 1 : 0),
 			"message",
 			results.message.c_str(),
 			"progress",
@@ -213,99 +228,12 @@ extern "C"
 		);
 		return p_results;
 	}
+
+	static PyObject* GetVersionInfo()
+	{
+		return py_version.build_py_arc_welder_version();
+	}
 }
 
-static bool ParseArgs(PyObject* py_args, py_gcode_arc_args& args, PyObject** py_progress_callback)
-{
-	p_py_logger->log(
-		GCODE_CONVERSION, INFO,
-		"Parsing GCode Conversion Args."
-		);
 
-	// Extract the source file path
-	PyObject* py_source_file_path =  PyDict_GetItemString(py_args, "source_file_path");
-	if (py_source_file_path == NULL)
-	{
-		std::string message = "ParseArgs - Unable to retrieve the source_file_path parameter from the args.";
-		p_py_logger->log_exception(GCODE_CONVERSION, message);
-		return false;
-	}
-	args.source_file_path = gcode_arc_converter::PyUnicode_SafeAsString(py_source_file_path);
-
-	// Extract the target file path
-	PyObject* py_target_file_path = PyDict_GetItemString(py_args, "target_file_path");
-	if (py_target_file_path == NULL)
-	{
-		std::string message = "ParseArgs - Unable to retrieve the target_file_path parameter from the args.";
-		p_py_logger->log_exception(GCODE_CONVERSION, message);
-		return false;
-	}
-	args.target_file_path = gcode_arc_converter::PyUnicode_SafeAsString(py_target_file_path);
-
-	// Extract the resolution in millimeters
-	PyObject* py_resolution_mm = PyDict_GetItemString(py_args, "resolution_mm");
-	if (py_resolution_mm == NULL)
-	{
-		std::string message = "ParseArgs - Unable to retrieve the resolution_mm parameter from the args.";
-		p_py_logger->log_exception(GCODE_CONVERSION, message);
-		return false;
-	}
-	args.resolution_mm = gcode_arc_converter::PyFloatOrInt_AsDouble(py_resolution_mm);
-	if (args.resolution_mm <= 0)
-	{
-		args.resolution_mm = 0.05; // Set to the default if no resolution is provided, or if it is less than 0.
-	}
-
-	// Extract the max_radius in mm
-	PyObject* py_max_radius_mm = PyDict_GetItemString(py_args, "max_radius_mm");
-	if (py_max_radius_mm == NULL)
-	{
-		std::string message = "ParseArgs - Unable to retrieve the max_radius_mm parameter from the args.";
-		p_py_logger->log_exception(GCODE_CONVERSION, message);
-		return false;
-	}
-	args.max_radius_mm = gcode_arc_converter::PyFloatOrInt_AsDouble(py_max_radius_mm);
-	if (args.max_radius_mm > DEFAULT_MAX_RADIUS_MM)
-	{
-		args.max_radius_mm = DEFAULT_MAX_RADIUS_MM; // Set to the default if no resolution is provided, or if it is less than 0.
-	}
-
-	// Extract G90/G91 influences extruder
-	// g90_influences_extruder
-	PyObject* py_g90_g91_influences_extruder = PyDict_GetItemString(py_args, "g90_g91_influences_extruder");
-	if (py_g90_g91_influences_extruder == NULL)
-	{
-		std::string message = "ParseArgs - Unable to retrieve g90_g91_influences_extruder from the args.";
-		p_py_logger->log_exception(GCODE_CONVERSION, message);
-		return false;
-	}
-	args.g90_g91_influences_extruder = PyLong_AsLong(py_g90_g91_influences_extruder) > 0;
-
-	// on_progress_received
-	PyObject* py_on_progress_received = PyDict_GetItemString(py_args, "on_progress_received");
-	if (py_on_progress_received == NULL)
-	{
-		std::string message = "ParseArgs - Unable to retrieve on_progress_received from the stabilization args.";
-		p_py_logger->log_exception(GCODE_CONVERSION, message);
-		return false;
-	}
-	// need to incref this so it doesn't vanish later (borrowed reference we are saving)
-	Py_XINCREF(py_on_progress_received);
-	*py_progress_callback = py_on_progress_received;
-
-	// Extract log_level
-	PyObject* py_log_level = PyDict_GetItemString(py_args, "log_level");
-	if (py_log_level == NULL)
-	{
-		std::string message = "ParseArgs - Unable to retrieve log_level from the args.";
-		p_py_logger->log_exception(GCODE_CONVERSION, message);
-		return false;
-	}
-	
-	int log_level_value = static_cast<int>(PyLong_AsLong(py_log_level));
-	// determine the log level as an index rather than as a value
-	args.log_level = p_py_logger->get_log_level_for_value(log_level_value);
-	
-	return true;
-}
 

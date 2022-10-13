@@ -4,7 +4,7 @@
 // Tools for parsing gcode and calculating printer state from parsed gcode commands.
 
 //
-// Copyright(C) 2020 - Brad Hochgesang
+// Copyright(C) 2021 - Brad Hochgesang
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This program is free software : you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -35,7 +35,7 @@ public:
 		count_ = 0;
 		items_ = new T[max_size_];
 	}
-	
+
 	array_list(int max_size)
 	{
 		auto_grow_ = false;
@@ -44,11 +44,11 @@ public:
 		count_ = 0;
 		items_ = new T[max_size];
 	}
-	
+
 	virtual ~array_list() {
 		delete[] items_;
 	}
-	
+
 	void resize(int max_size)
 	{
 		T* new_items = new T[max_size];
@@ -61,7 +61,17 @@ public:
 		items_ = new_items;
 		max_size_ = max_size;
 	}
-	
+
+	inline int get_index_position(int index) const
+	{
+		int index_position = index + front_index_ + max_size_;
+		while (index_position >= max_size_)
+		{
+			index_position = index_position - max_size_;
+		}
+		return index_position;
+	}
+
 	void push_front(T object)
 	{
 		if (count_ == max_size_)
@@ -74,11 +84,16 @@ public:
 				throw std::exception();
 			}
 		}
-		front_index_ = (front_index_ - 1 + max_size_) % max_size_;
+		//front_index_ = (front_index_ - 1 + max_size_) % max_size_;
+		front_index_ -= 1;
+		if (front_index_ < 0)
+		{
+			front_index_ = max_size_ - 1;
+		}
 		count_++;
 		items_[front_index_] = object;
 	}
-	
+
 	void push_back(T object)
 	{
 		if (count_ == max_size_)
@@ -91,11 +106,12 @@ public:
 				throw std::exception();
 			}
 		}
-		items_[(front_index_ + count_ + max_size_) % max_size_] = object;
+		int pos = get_index_position(count_);
+		items_[pos] = object;
 		count_++;
 	}
-	
-	T pop_front()
+
+	T& pop_front()
 	{
 		if (count_ == 0)
 		{
@@ -103,47 +119,55 @@ public:
 		}
 
 		int prev_start = front_index_;
-		front_index_ = (front_index_ + 1 + max_size_) % max_size_;
+
+		front_index_ += 1;
+		if (front_index_ >= max_size_)
+		{
+			front_index_ = 0;
+		}
 		count_--;
 		return items_[prev_start];
 	}
 
-	T pop_back()
+	T& pop_back()
 	{
 		if (count_ == 0)
 		{
 			throw std::exception();
 		}
-
-		return items_[--count_];
-	}
-	
-	T& operator[] (const int index) const
-	{
-		return items_[(front_index_ + index + max_size_) % max_size_];
+		int pos = get_index_position(count_ - 1);
+		count_--;
+		return items_[pos];
 	}
 
-	T get(int index) const
+	T& operator[] (int index) const
 	{
-		return items_[(front_index_ + index + max_size_) % max_size_];
+		//int opos = get_index_position(index);
+		return items_[get_index_position(index)];
 	}
-	
+
+	T& get(int index) const
+	{
+		int opos = get_index_position(index);
+		return items_[opos];
+	}
+
 	int count() const
 	{
 		return count_;
 	}
-	
+
 	int get_max_size() const
 	{
 		return max_size_;
 	}
-	
+
 	void clear()
 	{
 		count_ = 0;
 		front_index_ = 0;
 	}
-	
+
 	void copy(const array_list<T>& source)
 	{
 		if (max_size_ < source.max_size_)

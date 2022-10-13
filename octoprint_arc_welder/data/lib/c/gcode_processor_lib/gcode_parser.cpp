@@ -3,7 +3,7 @@
 //
 // Tools for parsing gcode and calculating printer state from parsed gcode commands.
 //
-// Copyright(C) 2020 - Brad Hochgesang
+// Copyright(C) 2021 - Brad Hochgesang
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This program is free software : you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -433,7 +433,7 @@ double gcode_parser::ten_pow(unsigned short n) {
 	return r;
 }
 
-bool gcode_parser::try_extract_double(char ** p_p_gcode, double * p_double) const
+bool gcode_parser::try_extract_double(char ** p_p_gcode, double * p_double, unsigned char *p_precision) const
 {
 	char * p = *p_p_gcode;
 	bool neg = false;
@@ -479,8 +479,8 @@ bool gcode_parser::try_extract_double(char ** p_p_gcode, double * p_double) cons
 			}
 			++p;
 		}
-		//r += f / pow(10.0, n);
 		r += f / ten_pow(n);
+		*p_precision = (unsigned char)n;
 	}
 	if (neg) {
 		r = -r;
@@ -594,7 +594,7 @@ bool gcode_parser::try_extract_parameter(char ** p_p_gcode, parsed_command_param
 	// TODO:  See if unsigned long works....
 
 	// Add all values, stop at end of string or when we hit a ';'
-	if (try_extract_double(&p,&(parameter->double_value)))
+	if (try_extract_double(&p,&(parameter->double_value), &(parameter->double_precision)))
 	{
 		parameter->value_type = 'F';
 	}

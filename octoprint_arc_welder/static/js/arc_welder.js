@@ -27,7 +27,93 @@ $(function () {
     // ArcWelder Global
     ArcWelder = {};
     ArcWelder.PLUGIN_ID = "arc_welder";
+    ArcWelder.toggleContentFunction = function ($elm, options, updateObservable, set_visible=null) {
 
+        if (options.toggle_observable) {
+            //console.log("Toggling element.");
+            if (updateObservable) {
+                options.toggle_observable(!options.toggle_observable());
+                //console.log("Observable updated - " + options.toggle_observable())
+            }
+            if (options.toggle_observable()) {
+                if (options.class_showing) {
+                    $elm.children('[class^="icon-"]').addClass(options.class_showing);
+                    $elm.children('[class^="fa"]').addClass(options.class_showing);
+                }
+                if (options.class_hiding) {
+                    $elm.children('[class^="icon-"]').removeClass(options.class_hiding);
+                    $elm.children('[class^="fa"]').removeClass(options.class_hiding);
+                }
+                if (options.container) {
+                    if (options.parent) {
+                        $elm.parents(options.parent).find(options.container).stop().slideDown('fast', options.onComplete);
+                    } else {
+                        $(options.container).stop().slideDown('fast', options.onComplete);
+                    }
+                }
+            } else {
+                if (options.class_hiding) {
+                    $elm.children('[class^="icon-"]').addClass(options.class_hiding);
+                    $elm.children('[class^="fa"]').addClass(options.class_hiding);
+                }
+                if (options.class_showing) {
+                    $elm.children('[class^="icon-"]').removeClass(options.class_showing);
+                    $elm.children('[class^="fa"]').removeClass(options.class_showing);
+                }
+                if (options.container) {
+                    if (options.parent) {
+                        $elm.parents(options.parent).find(options.container).stop().slideUp('fast', options.onComplete);
+                    } else {
+                        $(options.container).stop().slideUp('fast', options.onComplete);
+                    }
+                }
+            }
+        } else {
+            if (options.class) {
+                $elm.children('[class^="icon-"]').toggleClass(options.class_hiding + ' ' + options.class_showing);
+                $elm.children('[class^="fa"]').toggleClass(options.class_hiding + ' ' + options.class_showing);
+            }
+            if (options.container) {
+                if (options.parent) {
+                    $elm.parents(options.parent).find(options.container).stop().slideToggle('fast', options.onComplete);
+                } else {
+                    $(options.container).stop().slideToggle('fast', options.onComplete);
+                }
+            }
+        }
+
+    };
+    ArcWelder.toggle = {
+        init: function (element, valueAccessor) {
+            var $elm = $(element),
+                options = $.extend({
+                    class_showing: null,
+                    class_hiding: null,
+                    container: null,
+                    parent: null,
+                    toggle_observable: null,
+                    onComplete: function () {
+                        $(document).trigger("slideCompleted");
+                    }
+                }, valueAccessor());
+
+            if (options.toggle_observable) {
+                ArcWelder.toggleContentFunction($elm, options, false);
+                options.toggle_observable.update_visible = function(){
+
+                    ArcWelder.toggleContentFunction($elm, options, false);
+                };
+            }
+
+
+            $elm.on("click", function (e) {
+                e.preventDefault();
+                ArcWelder.toggleContentFunction($elm, options, true);
+
+            });
+        }
+    };
+    ko.bindingHandlers.arc_welder_toggle = ArcWelder.toggle;
     ArcWelder.setLocalStorage = function (name, value) {
         localStorage.setItem("arc_welder_" + name, value)
     };
@@ -41,6 +127,22 @@ $(function () {
         if (!isNaN(ret))
             return ret;
         return null;
+    };
+
+    ArcWelder.getPercentChange = function(source, target){
+        if (target != 0)
+        {
+            return ((target - source) /target) * 100.0;
+        }
+        return 0;
+    };
+
+    ArcWelder.getPercent = function(numerator, denominator){
+        if (denominator != 0)
+        {
+            return (numerator/denominator) * 100.0;
+        }
+        return 0;
     };
     // extenders
 
@@ -67,11 +169,202 @@ $(function () {
         result.raw = target;
         return result;
     };
+
+    ArcWelder.boolToPureComputedProperty = function(target, options){
+        var true_value = options.true_value ?? "True";
+        var false_value = options.false_value ?? "False";
+        var null_value = options.null_value ?? "Null";
+        var property_name = options.property_name ?? "boolToText"
+        target[property_name] = ko.pureComputed( function(){
+            var val = target();
+            if (val === null)
+                return null_value;
+            return val ? true_value : false_value;
+        });
+        return target;
+    }
+
+    ko.extenders.arc_welder_bool_formatted = function (target, options) {
+        options.property_name = "formatted";
+        return ArcWelder.boolToPureComputedProperty(target, options)
+    };
+    // I hate writing basically the same extender twice, but I can
+    // an extender only once to an observable, so it can't be super generic
+    ko.extenders.arc_welder_bool_class = function (target, options) {
+        options.property_name = "class";
+        return ArcWelder.boolToPureComputedProperty(target, options);
+    };
+
+    ArcWelder.ToTimer = function (seconds, format){
+        var total_seconds = seconds
+        if (!format)
+        {
+            format = "timer"
+        }
+        if (seconds == null)
+            return "";
+        if (seconds <= 0)
+            seconds = 0;
+        seconds = Math.round(seconds);
+
+        var hours = Math.floor(seconds / 3600);
+        seconds = seconds % 3600;
+        var minutes = Math.floor(seconds/60);
+        seconds = seconds % 60;
+
+        if (format == "estimate")
+        {
+            var message = "";
+            if (hours > 0)
+            {
+                message += "About " + hours.toString() + " hours";
+                if (minutes > 0)
+                {
+                    message += " and " + minutes.toString() + " minutes";
+                }
+            }
+            else if (minutes > 0){
+                message += "About " + minutes.toString() + " minutes";
+                if (seconds > 0)
+                {
+                    message += " and " + seconds.toString() + " seconds";
+                }
+            }
+            else if (seconds > 0){
+                message += "About " + seconds.toString() + " seconds";
+            }
+            else
+            {
+                message = "less than 1 second";
+            }
+            return message;
+
+        }
+        else if (format == "long")
+        {
+            var longTime = "";
+            if (hours < 1 && minutes < 1 && seconds < 1)
+            {
+                return "Less than 1 second";
+            }
+            if (hours>0)
+            {
+                longTime += hours.toString() + " hours";
+            }
+            if (minutes>0)
+            {
+                if (longTime.length > 0){
+                    if (seconds == 0)
+                    {
+                        longTime += " and ";
+                    }
+                    else
+                    {
+                        longTime += " ";
+                    }
+                }
+                longTime += minutes.toString() + " minutes";
+            }
+            if (seconds>0)
+            {
+                if (longTime.length > 0){
+                    longTime += " and ";
+                }
+                longTime += seconds.toString() + " seconds";
+            }
+            return longTime
+
+        }
+
+        // Default: 00:00:00 if < 99 hrs else it will mess up
+        if (hours > 99)
+        {
+            return hours.toString() + "99hrs";
+        }
+        return ("0" + hours.toString()).slice(-2) + ":"  + ("0" + minutes.toString()).slice(-2) + ":" + ("0" + seconds.toString()).slice(-2);
+
+    };
+
+    ko.extenders.arc_welder_timer = function (target, options) {
+        var property_name = "formatted";
+        var format = options.format;
+        target[property_name] = ko.pureComputed( function(){
+            var val = target();
+            if (val === null)
+            {
+                val = 0;
+            }
+            return ArcWelder.ToTimer(val, format);
+        });
+        return target;
+    };
+
+    ArcWelder.toShortNumber = function (number, precision){
+        precision = precision || 0;
+        if (Math.abs(number) < 1000) {
+            return number;
+        }
+        var units = ['K', 'M', 'B', 'T'];
+        var u = -1;
+        do {
+            number /= 1000;
+            ++u;
+        } while (Math.abs(number) >= 1000 && u < units.length - 1);
+        return number.toFixed(precision) + units[u];
+    };
+
+    ko.extenders.arc_welder_short_number = function (target, options) {
+        var property_name = "formatted";
+        var precision = options.precision;
+        target[property_name] = ko.pureComputed( function(){
+            var val = target();
+            if (val === null)
+            {
+                val = 0;
+            }
+            return ArcWelder.toShortNumber(val, precision);
+        });
+        return target;
+    };
+
+    var byte = 1024;
+    ArcWelder.toFileSizeString = function (bytes, precision) {
+        precision = precision || 0;
+
+        if (Math.abs(bytes) < byte) {
+            return bytes + ' B';
+        }
+        var units = ['K', 'M', 'B', 'T'];
+        var u = -1;
+        do {
+            bytes /= byte;
+            ++u;
+        } while (Math.abs(bytes) >= byte && u < units.length - 1);
+        return bytes.toFixed(precision) + ' ' + units[u];
+    };
+
+    ko.extenders.arc_welder_file_size = function (target, precision) {
+        var property_name = "formatted";
+        target[property_name] = ko.pureComputed( function(){
+            var val = target();
+            if (val === null)
+            {
+                val = 0;
+            }
+            return ArcWelder.toFileSizeString(val, precision);
+        });
+        return target;
+    };
+
+    ArcWelder.GetVisibilityStyle = function(visible){
+        return visible ? "show" : "hidden";
+    }
     //ArcWelder.pnotify = PNotifyExtensions({});
     ArcWelder.APIURL = function(fn){
         return "./plugin/" + ArcWelder.PLUGIN_ID + "/" + fn;
     };
     ArcWelder.HelpDocumentRootUrl = ArcWelder.APIURL("static/docs/help/");
+    ArcWelder.HelpDataDocumentRootUrl = ArcWelder.APIURL("data/docs/help/")
     ArcWelder.PopupKey = function(key) {
         if (Array.isArray(key))
         {
@@ -89,71 +382,649 @@ $(function () {
         plugin_name: "Arc Welder: Anti Stutter",
         missing_file_text: "No help file is available, please report this issue within the github repository.",
         add_class: 'arc-welder-pnotify-help',
-        document_root_url: ArcWelder.HelpDocumentRootUrl
+        document_root_url: ArcWelder.HelpDocumentRootUrl,
+        data_document_root_url: ArcWelder.HelpDataDocumentRootUrl
     });
 
-    ArcWelder.ToTimer = function (seconds) {
-        if (seconds == null)
-            return "";
-        if (seconds <= 0)
-            return "0:00";
+    ArcWelder.PROCESS_OPTION_ALWAYS = "always";
+    ArcWelder.PROCESS_OPTION_UPLOADS_ONLY = "uploads-only";
+    ArcWelder.PROCESS_OPTION_SLICER_UPLOADS = "slicer-uploads";
+    ArcWelder.PROCESS_OPTION_DISABLED = "disabled";
+    ArcWelder.PROCESS_OPTION_MANUAL_ONLY = "manual-only";
 
-        seconds = Math.round(seconds);
-
-        var hours = Math.floor(seconds / 3600).toString();
-        if (hours > 0) {
-            return ("" + hours).slice(-2) + " Hrs";
-        }
-
-        seconds %= 3600;
-        var minutes = Math.floor(seconds / 60).toString();
-        seconds = (seconds % 60).toString();
-        return ("0" + minutes).slice(-2) + ":" + ("0" + seconds).slice(-2);
-    };
-
-    var byte = 1024;
-    ArcWelder.toFileSizeString = function (bytes, precision) {
-        precision = precision || 0;
-
-        if (Math.abs(bytes) < byte) {
-            return bytes + ' B';
-        }
-        var units = ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-        var u = -1;
-        do {
-            bytes /= byte;
-            ++u;
-        } while (Math.abs(bytes) >= byte && u < units.length - 1);
-        return bytes.toFixed(precision) + ' ' + units[u];
-    };
-
-    ArcWelder.FILE_PROCESSING_BOTH = "both";
-    ArcWelder.FILE_PROCESSING_AUTO = "auto-only";
-    ArcWelder.FILE_PROCESSING_MANUAL = "manual-only";
     ArcWelder.FILE_PROCESSING_OPTIONS = [
-        {name:"Automatic and Manual Processing", value: ArcWelder.FILE_PROCESSING_BOTH},
-        {name:"Automatic Processing Only", value: ArcWelder.FILE_PROCESSING_AUTO},
-        {name:"Manual Processing Only", value: ArcWelder.FILE_PROCESSING_MANUAL}
+        {name:"All New Files", value: ArcWelder.PROCESS_OPTION_ALWAYS},
+        // This option won't work at the moment.  Maybe in the future
+        // {name:"Direct Slicer Uploads", value: ArcWelder.PROCESS_OPTION_SLICER_UPLOADS},
+        {name:"Manual Processing Only", value: ArcWelder.PROCESS_OPTION_MANUAL_ONLY},
     ];
-
-    SOURCE_FILE_DELETE_BOTH = "both"
-    SOURCE_FILE_DELETE_AUTO = "auto-only"
-    SOURCE_FILE_DELETE_MANUAL = "manual-only"
-    SOURCE_FILE_DELETE_NONE = "none"
-
-    ArcWelder.SOURCE_FILE_DELETE_BOTH = "both";
-    ArcWelder.SOURCE_FILE_DELETE_AUTO = "auto-only";
-    ArcWelder.SOURCE_FILE_DELETE_MANUAL = "manual-only";
-    ArcWelder.SOURCE_FILE_DELETE_DISABLED = "disabled";
     ArcWelder.SOURCE_FILE_DELETE_OPTIONS = [
-        {name:"Always Delete Source File", value: ArcWelder.SOURCE_FILE_DELETE_BOTH},
-        {name:"Delete After Automatic Processing", value: ArcWelder.SOURCE_FILE_DELETE_AUTO},
-        {name:"Delete After Manual Processing", value: ArcWelder.SOURCE_FILE_DELETE_MANUAL},
-        {name:"Disabled", value: ArcWelder.SOURCE_FILE_DELETE_DISABLED}
+        {name:"Always Delete Source", value: ArcWelder.PROCESS_OPTION_ALWAYS},
+        {name:"Disabled", value: ArcWelder.PROCESS_OPTION_DISABLED}
     ];
+    ArcWelder.PRINT_AFTER_PROCESSING_OPTIONS = [
+        {name:"Always", value: ArcWelder.PROCESS_OPTION_ALWAYS},
+        // This option won't work ATM, maybe in the future.
+        //{name:"After Slicer Upload", value: ArcWelder.PROCESS_OPTION_SLICER_UPLOADS},
+        {name:"After Manual Processing", value: ArcWelder.PROCESS_OPTION_MANUAL_ONLY},
+        {name:"Disabled", value: ArcWelder.PROCESS_OPTION_DISABLED}
+    ];
+    ArcWelder.SELECT_FILE_AFTER_PROCESSING_OPTIONS = [
+        {name:"Always", value: ArcWelder.PROCESS_OPTION_ALWAYS},
+        {name:"Uploaded Files", value: ArcWelder.PROCESS_OPTION_UPLOADS_ONLY},
+        {name:"Disabled", value: ArcWelder.PROCESS_OPTION_DISABLED}
+    ];
+
+    ArcWelder.CHECK_FIRMWARE_ON_CONECT = "connection"
+    ArcWelder.CHECK_FIRMWARE_MANUAL_ONLY = "manual-only"
+    ArcWelder.CHECK_FIRMWARE_DISABLED = "disabled"
+    ArcWelder.CHECK_FIRMWARE_OPTIONS = [
+        {name:"Automatically When Printer Connects", value: ArcWelder.CHECK_FIRMWARE_ON_CONECT},
+        {name:"Only Check Manually", value: ArcWelder.CHECK_FIRMWARE_MANUAL_ONLY},
+        {name:"Disabled", value: ArcWelder.CHECK_FIRMWARE_DISABLED},
+    ]
+
+    ArcWelder.getOptionNameForValue = function (options, value){
+        for (var index=0; index < options.length; index++)
+        {
+            var item = options[index];
+            if (item.value === value)
+            {
+                return item.name;
+            }
+        }
+        logger.error("Could not find value '" + value + "' for options.");
+        return "Unknown";
+    }
+
+    ArcWelder.FirmwareViewModel = function (firmware){
+        var self = this;
+        self.bool_display_options = {
+            true_value: "Yes",
+            false_value: "No",
+            null_value: "Unknown"
+        }
+        self.bool_class_options = {
+            true_value: "text-success",
+            false_value: "text-error",
+            null_value: "text-warning"
+        }
+
+        self.loaded = ko.observable(false);
+        self.success = ko.observable();
+        self.type = ko.observable();
+        self.type_help_file = ko.observable();
+        self.version = ko.observable();
+        self.checking_for_firmware_info_updates = ko.observable(false);
+        self.firmware_types_version = ko.observable("unknown");
+        self.version_help_file = ko.observable();
+        self.previous_version_help_file = ko.observable();
+        self.build_date = ko.observable();
+        self.version_range = ko.observable();
+        self.guid = ko.observable();
+        self.printer = ko.observable();
+        self.supported = ko.observable().extend({
+            arc_welder_bool_formatted:self.bool_display_options, arc_welder_bool_class: self.bool_class_options
+        });
+        self.known_issues = ko.observableArray();
+        self.is_future = ko.observable();
+        self.notes = ko.observable();
+        self.previous_notes = ko.observable();
+        self.error = ko.observable();
+        self.m115_response = ko.observable();
+        self.g2_g3_supported = ko.observable().extend({
+            arc_welder_bool_formatted:self.bool_display_options, arc_welder_bool_class: self.bool_class_options
+        });
+        self.arcs_enabled = ko.observable().extend({
+            arc_welder_bool_formatted:self.bool_display_options, arc_welder_bool_class: self.bool_class_options
+        });
+        self.g2_g3_z_parameter_supported = ko.observable().extend({
+            arc_welder_bool_formatted:self.bool_display_options, arc_welder_bool_class: self.bool_class_options
+        });
+        self.g90_g91_influences_extruder = ko.observable().extend({
+            arc_welder_bool_formatted:self.bool_display_options, arc_welder_bool_class: self.bool_class_options
+        });
+        self.last_check_datetime = ko.observable()
+        self.firmware_types_info_default = {
+            last_check_success:null,
+            last_checked_date:null,
+            version:null
+        };
+        self.firmware_types_info = ko.observable(self.firmware_types_info_default);
+        self.arc_settings = ko.observable();
+
+        self.checking_firmware = ko.observable(false);
+
+        self.has_known_issues = ko.pureComputed(function(){
+            return self.known_issues().length > 0;
+        });
+        self.update = function(data, firmware_types_version){
+            self.firmware_types_info(firmware_types_version ?? self.firmware_types_info_default)
+            data = data??{};
+            self.loaded(true);
+            self.success(data.success ?? null);
+            self.type(data.type ?? null);
+            self.type_help_file(data.type_help_file ?? null);
+            self.version(data.version ?? null);
+            self.version_help_file(data.version_help_file ?? null);
+            self.previous_version_help_file(data.previous_version_help_file ?? null);
+            self.build_date(data.build_date ?? null);
+            self.version_range(data.version_range ?? null);
+            self.guid(data.guid ?? null);
+            self.printer(data.printer ?? null);
+            self.supported(data.supported ?? null);
+            self.known_issues(data.known_issues ?? []);
+            self.is_future(data.is_future ?? null)
+            self.notes(data.notes ?? null);
+            self.previous_notes(data.previous_notes ?? null);
+            self.error(data.error ?? null);
+            self.m115_response(data.m115_response ?? null);
+            self.g2_g3_supported(data.g2_g3_supported ?? null);
+            self.arcs_enabled(data.arcs_enabled ?? null);
+            self.g2_g3_z_parameter_supported(data.g2_g3_z_parameter_supported ?? null);
+            self.g90_g91_influences_extruder(data.g90_g91_influences_extruder ?? null);
+            self.last_check_datetime(data.last_check_datetime ?? null);
+            self.arc_settings(data.arc_settings ?? null);
+            ArcWelder.Help.bindHelpLinks("#arc_welder_firmware_compatibility");
+        };
+
+        self.has_warnings = ko.pureComputed(function(){
+            return self.warnings().length > 0 || self.has_known_issues();
+        }).extend({
+            arc_welder_bool_formatted:self.bool_display_options, arc_welder_bool_class: self.bool_class_options
+        });;
+
+        self.warnings = ko.pureComputed(function(){
+            var success = self.success();
+            var type = self.type();
+            var version = self.version();
+            var supported = self.supported();
+            var arcs_enabled = self.arcs_enabled();
+            var g2_g3_supported = self.g2_g3_supported;
+            var g2_g3_z_parameter_supported = self.g2_g3_z_parameter_supported();
+            var allow_3d_arcs = ArcWelder.Tab.plugin_settings.allow_3d_arcs()
+            var warnings = [];
+            if (success === null)
+            {
+                warnings.push("No firmware check has been completed.  Please make sure your printer is connected, then click 'Check Firmware'.");
+            }
+            else if (success) {
+                if (type === null){
+                    warnings.push("Arc welder was unable to identity this firmware.  It might not support arc commands, or it may have bugs, but it may work fine.  Use with caution");
+                }
+                else if (version === null)
+                {
+                    warnings.push("Arc welder was unable to identity firmware version.  It might not support arc commands, or it may have bugs, but it may work fine.  Use with caution");
+                }
+                else
+                {
+                    if (supported===false && arcs_enabled)
+                    {
+                        warnings.push("Your firmware version indicates that it is not supported, but arcs appear to be supported and enabled.  Use with caution.");
+                    }
+                    if (g2_g3_supported===null)
+                    {
+                        // G2/G3 support unknown
+                        warnings.push("Cannot determine if arc commands (G2/G3) are supported by your firmware.");
+                    }
+                    if (g2_g3_z_parameter_supported===null)
+                    {
+                        // g2_g3_z_parameter_supported support unknown
+                        if (allow_3d_arcs){
+                            warnings.push("Cannot determine if 3D Arc commands are supported (for use with vase mode), but 3D Arcs are currently enabled in the Arc Welder settings.  Please use with extreme caution!");
+                        }
+                        else {
+                            warnings.push("Cannot determine if 3D Arc commands are supported (for use with vase mode).  Since 3D arcs are currently disabled, this should be OK.");
+                        }
+                    }
+                    if (g2_g3_z_parameter_supported===false && !allow_3d_arcs)
+                    {
+                        // g2_g3_z_parameter_supported support unknown
+                        warnings.push("3D Arcs are not supported by your firmware.  Since 3D arcs are currently disabled, this should be OK.");
+                    }
+                    if (arcs_enabled ===null)
+                    {
+                        // Arcs enabled unknown
+                        warnings.push("Cannot determine if arc commands are enabled in your firmware.");
+                    }
+                }
+
+            }
+            return warnings;
+        });
+
+        self.has_errors = ko.pureComputed(function(){
+            return self.errors().length > 0;
+        }).extend({
+            arc_welder_bool_formatted:self.bool_display_options, arc_welder_bool_class: self.bool_class_options
+        });
+
+        self.errors = ko.pureComputed(function(){
+            var errors = [];
+            // Call the observables up front so this is recalculated properly.
+            var success = self.success();
+            var supported = self.supported();
+            var arcs_enabled = self.arcs_enabled();
+            var g2_g3_supported = self.g2_g3_supported();
+            var g90_influences_extruder_setting_correct = self.g90_influences_extruder_setting_correct();
+            var g90_g91_influences_extruder = self.g90_g91_influences_extruder();
+            var allow_3d_arcs = ArcWelder.Tab.plugin_settings.allow_3d_arcs();
+            var g2_g3_z_parameter_supported = self.g2_g3_z_parameter_supported();
+
+            if (!success)
+            {
+                if (success !== null)
+                {
+                    errors.push("The last firmware check failed.  Please try again.  Click the help link for troubleshooting tips.");
+                }
+            }
+            else
+            {
+                if (supported===false && !arcs_enabled)
+                {
+                    // Not Supported
+                    errors.push("Your printer's firmware is not supported.");
+                }
+                else if (g2_g3_supported===false)
+                {
+                    // G2/G3 not supported
+                    errors.push("Your printer's firmware does not support G2/G3 (arc) commands.");
+                }
+                else if (arcs_enabled===false)
+                {
+                    // Arcs not Enabled
+                    errors.push("Arcs are not enabled in your printer's firmware.");
+                }
+                // Check G2/G3 influences extruder:
+
+                if (!g90_influences_extruder_setting_correct)
+                {
+                    var correct_setting = "DISABLED";
+                    if(g90_g91_influences_extruder) {
+                        correct_setting = "ENABLED";
+                    }
+
+                    var setting_location = "Edit the Arc Welder setting 'G90/G91 Influences Extruder'";
+                    if (self.use_octoprint_settings()) {
+                        setting_location = "Edit the Ocotprint feature setting 'G90/G91 overrides relative extruder mode'"
+                    }
+
+                    var error_string = "Your firmware requires the 'G90/G91 Influences Extruder' setting to be " + correct_setting + ".  " + setting_location + ", set the value to " + correct_setting + ", and run the firmware check again.";
+                    errors.push(error_string);
+
+                }
+                if (allow_3d_arcs && g2_g3_z_parameter_supported===false)
+                {
+                   errors.push("3D Arcs are enabled, but they are not supported by your firmware.  Edit the Arc Welder settings, uncheck 'Allow 3D Arcs', and run the firmware check again.");
+                }
+
+            }
+            return errors;
+        });
+
+        self.use_octoprint_settings = ko.pureComputed(function() {
+            return ArcWelder.Tab.plugin_settings.use_octoprint_settings();
+        });
+
+        self.g90_influences_extruder_setting = ko.pureComputed(function() {
+            var g90_g91_influences_extruder_plugin = ArcWelder.Tab.plugin_settings.g90_g91_influences_extruder();
+            var g90_g91_influences_extruder_octoprint = ArcWelder.Tab.octoprint_settings.feature.g90InfluencesExtruder();
+            if (self.use_octoprint_settings())
+            {
+                return g90_g91_influences_extruder_octoprint;
+            }
+            return g90_g91_influences_extruder_plugin;
+        });
+
+        self.g90_influences_extruder_setting_correct = ko.pureComputed(function(){
+            var g90_g91_influences_extruder_firmware = self.g90_g91_influences_extruder();
+            var g90_g91_influences_extruder_current = self.g90_influences_extruder_setting();
+
+            if (
+                g90_g91_influences_extruder_firmware !== null
+                && g90_g91_influences_extruder_firmware != g90_g91_influences_extruder_current)
+            {
+                return false;
+            }
+            return true;
+        });
+
+        self.checkFirmware = function(){
+            if (self.checking_firmware())
+                return;
+            self.checking_firmware(true);
+            $.ajax({
+                url: ArcWelder.APIURL("checkFirmware"),
+                type: "POST",
+                contentType: "application/json",
+                success: function(data) {
+                    if (data.success)
+                    {
+                        // The request was successful, but the results are pending
+                        self.checking_firmware(true);
+                    }
+                    else
+                    {
+                        // The request failed, we are parobably already checking.
+                        self.checking_firmware(false);
+                        // Show an error since the check failed.
+                        self.update(false);
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    self.checking_firmware(false);
+                    var message = "Unable to check the firmware.  Status: " + textStatus + ".  Error: " + errorThrown;
+                    var options = {
+                        title: 'Check Firmware Error',
+                        text: message,
+                        type: 'error',
+                        hide: false,
+                        addclass: "arc_welder",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    PNotifyExtensions.displayPopupForKey(
+                        options,
+                        ArcWelder.PopupKey("check_firmware_error"),
+                        ArcWelder.PopupKey("check_firmware_error")
+                    );
+                }
+            });
+        }
+
+        self.getFirmwareVersion = function() {
+            $.ajax({
+                url: ArcWelder.APIURL("getFirmwareVersion"),
+                type: "POST",
+                tryCount: 0,
+                retryLimit: 3,
+                contentType: "application/json",
+                success: function(data) {
+                    var firmware_info = false;
+                    var firmware_types_info = data.firmware_types_info;
+                    if (data.success)
+                    {
+                       firmware_info = data.firmware_info;
+                    }
+                    self.update(firmware_info, firmware_types_info);
+
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    var message = "Could not retrieve firmware data.  Status: " + textStatus + ".  Error: " + errorThrown;
+                    console.error(message);
+                    return false;
+                }
+            });
+        }
+
+        self.checkForFirmwareInfoUpdates = function(){
+            if (self.checking_for_firmware_info_updates())
+                return;
+
+            self.checking_for_firmware_info_updates(true)
+
+            $.ajax({
+                url: ArcWelder.APIURL("checkForFirmwareInfoUpdates"),
+                type: "POST",
+                contentType: "application/json",
+                success: function(data) {
+                    self.checking_for_firmware_info_updates(false)
+                    if (data.success)
+                    {
+                        self.update(data.firmware_info, data.firmware_types_info);
+                    }
+                    else if (!data.success)
+                    {
+                        var options = {
+                            title: 'Update Firmware Info Failed',
+                            text: data.error,
+                            type: 'error',
+                            hide: false,
+                            addclass: "arc_welder",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        PNotifyExtensions.displayPopupForKey(
+                            options,
+                            ArcWelder.PopupKey("update_firmware_info_error"),
+                            ArcWelder.PopupKey("update_firmware_info_error")
+                        );
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    self.checking_for_firmware_info_updates(false);
+                    var message = "Unable to check the firmware.  Status: " + textStatus + ".  Error: " + errorThrown;
+                    var options = {
+                        title: 'Check Firmware Error',
+                        text: message,
+                        type: 'error',
+                        hide: false,
+                        addclass: "arc_welder",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    PNotifyExtensions.displayPopupForKey(
+                        options,
+                        ArcWelder.PopupKey("check_firmware_error"),
+                        ArcWelder.PopupKey("check_firmware_error")
+                    );
+                }
+            });
+        }
+    }
+
+    ArcWelder.FileStatisticsViewModel = function()
+    {
+        var self = this;
+        self.size = ko.observable().extend({arc_welder_file_size: 1});
+        self.length = ko.observable().extend({arc_welder_short_number: {precision:1}});
+        self.count = ko.observable().extend({arc_welder_short_number: {precision:1}});
+
+        self.update = function(data){
+            self.size(data.size);
+            self.length(data.length);
+            self.count(data.count);
+        };
+        return self;
+    }
+
+    ArcWelder.SourceTargetStatisticsViewModel = function(name) {
+        var self = this;
+        self.name = ko.observable(name);
+        self.source = new ArcWelder.FileStatisticsViewModel();
+        self.target = new ArcWelder.FileStatisticsViewModel();
+        self.statistics_text = ko.observable();
+
+        self.reduction_percent_count = ko.pureComputed(function(){
+            return ArcWelder.getPercentChange(self.target.count(), self.source.count());
+        }).extend({arc_welder_numeric: 1});
+
+        self.reduction_percent_length = ko.pureComputed(function(){
+            return ArcWelder.getPercentChange(self.target.count(),self.source.count());
+        }).extend({arc_welder_numeric: 1});
+
+        var initial_detail_visible = ArcWelder.getLocalStorage(name + "_detail_visible") !== "false";
+        self.detail_visible = ko.observable(initial_detail_visible);
+        self.detail_visible.subscribe(function(newValue){
+            var storage_value = newValue ? 'true' : 'false';
+            ArcWelder.setLocalStorage(name + "detail_visible", storage_value);
+        });
+
+        self.update = function(data){
+            self.source.update({
+                size: data.source_file_size,
+                length: data.source_file_length,
+                count: data.source_file_count,
+            });
+            self.target.update({
+                size: data.target_file_size,
+                length: data.target_file_length,
+                count: data.target_file_count,
+            });
+            self.statistics_text(data.statistics_text);
+        };
+        return self;
+    }
+
+    ArcWelder.ProgressStatisticsViewModel = function() {
+        var self = this;
+        self.percent_complete = ko.observable(0).extend({arc_welder_numeric: 1});
+
+        self.seconds_remaining = ko.observable().extend({arc_welder_timer: {format:"estimate"}});
+        self.source_position = ko.observable().extend({arc_welder_file_size: 1});
+        self.update = function(data) {
+            self.percent_complete(data.percent_complete);
+
+            self.seconds_remaining(data.seconds_remaining);
+            self.source_position(data.file_position);
+
+        }
+        return self;
+    }
+
+    ArcWelder.StatisticsViewModel = function(is_progress) {
+        var self = this;
+        self.is_progress = is_progress;
+        self.guid = ko.observable(null);
+        self.source_name = ko.observable("");
+        self.source_file_size = ko.observable().extend({arc_welder_file_size: 1});
+        self.target_name = ko.observable("");
+        self.target_file_size = ko.observable().extend({arc_welder_file_size: 1});
+        self.lines_processed = ko.observable().extend({arc_welder_short_number: {precision:1}});
+        self.seconds_elapsed = ko.observable().extend({arc_welder_timer: {format:"timer"}});
+
+        // Progress Statistics - only used for progress updates
+        self.progress_statistics = new ArcWelder.ProgressStatisticsViewModel();
+        // Conversion Statistics
+        self.arcs_created = ko.observable().extend({arc_welder_short_number: {precision:1}});
+        self.num_firmware_compensations = ko.observable().extend({arc_welder_short_number: {precision:1}});
+        self.num_gcode_length_exceptions = ko.observable().extend({arc_welder_short_number: {precision:1}});
+        self.arcs_aborted_by_flowrate = ko.observable().extend({arc_welder_short_number: {precision:1}});
+        self.points_compressed = ko.observable().extend({arc_welder_short_number: {precision:1}});
+        self.compression_ratio = ko.observable().extend({arc_welder_numeric: 1});
+        self.compression_percent = ko.observable().extend({arc_welder_numeric: 1});
+
+        // Detailed Statistics Text - Only used for non-progress statistics
+        self.combined_statistics = new ArcWelder.SourceTargetStatisticsViewModel("combined");
+        self.extrusion_statistics = new ArcWelder.SourceTargetStatisticsViewModel("extrusion");
+        self.retraction_statistics = new ArcWelder.SourceTargetStatisticsViewModel("retraction");
+        self.travel_statistics = new ArcWelder.SourceTargetStatisticsViewModel("travel");
+
+        self.space_saved = ko.pureComputed(function(){
+            return self.source_file_size() - self.target_file_size();
+        }).extend({arc_welder_file_size: 1});
+
+        self.space_saved_string = ko.pureComputed(function(){
+            return ArcWelder.toFileSizeString(
+                self.space_saved(), 1
+            );
+        });
+
+        self.target_file_lines = ko.pureComputed(function(){
+            return ArcWelder.toShortNumber(
+                self.lines_processed() - self.points_compressed(), 1);
+        });
+
+        var initial_combined_detail_visible = ArcWelder.getLocalStorage("combined_detail_visible") !== "false";
+        self.combined_detail_visible = ko.observable(initial_combined_detail_visible);
+        self.combined_detail_visible.subscribe(function(newValue){
+            var storage_value = newValue ? 'true' : 'false';
+            ArcWelder.setLocalStorage("combined_detail_visible", storage_value);
+        });
+
+        var initial_extrusion_detail_visible = ArcWelder.getLocalStorage("extrusion_detail_visible") !== "false";
+        self.extrusion_detail_visible = ko.observable(initial_extrusion_detail_visible);
+        self.extrusion_detail_visible.subscribe(function(newValue){
+            var storage_value = newValue ? 'true' : 'false';
+            ArcWelder.setLocalStorage("extrusion_detail_visible", storage_value);
+        });
+
+        var initial_retraction_detail_visible = ArcWelder.getLocalStorage("retraction_detail_visible") !== "false";
+        self.retraction_detail_visible = ko.observable(initial_retraction_detail_visible);
+        self.retraction_detail_visible.subscribe(function(newValue){
+            var storage_value = newValue ? 'true' : 'false';
+            ArcWelder.setLocalStorage("retraction_detail_visible", storage_value);
+        });
+
+        var initial_travel_detail_visible = ArcWelder.getLocalStorage("travel_detail_visible") !== "false";
+        self.travel_detail_visible = ko.observable(initial_travel_detail_visible);
+        self.travel_detail_visible.subscribe(function(newValue){
+            var storage_value = newValue ? 'true' : 'false';
+            ArcWelder.setLocalStorage("travel_detail_visible", storage_value);
+        });
+
+        self.update = function(data)
+        {
+            // Source/Target Info
+            self.source_name(data.source_name);
+            self.source_file_size(data.source_file_size);
+            self.target_name(data.target_name);
+            self.target_file_size(data.target_file_size);
+            // Progress Statistics
+            self.seconds_elapsed(data.seconds_elapsed);
+            self.lines_processed(data.lines_processed);
+            if (self.is_progress)
+            {
+                self.progress_statistics.update(data);
+            }
+            // Conversion Statistics
+
+            self.arcs_created(data.arcs_created);
+            self.num_firmware_compensations(data.num_firmware_compensations);
+            self.num_gcode_length_exceptions(data.num_gcode_length_exceptions);
+            self.arcs_aborted_by_flowrate(data.arcs_aborted_by_flowrate);
+            self.points_compressed(data.points_compressed);
+            self.compression_ratio(data.compression_ratio);
+            self.compression_percent(data.compression_percent);
+            // Detailed Statistics
+            self.combined_statistics.update({
+                source_file_size: data.source_file_total_size,
+                target_file_size: data.target_file_total_size,
+                source_file_length: data.source_file_total_length,
+                target_file_length: data.target_file_total_length,
+                source_file_count: data.source_file_total_count,
+                target_file_count: data.target_file_total_count,
+                statistics_text: data.segment_statistics_text,
+            });
+            self.extrusion_statistics.update({
+                source_file_size: data.source_file_total_size,
+                target_file_size: data.target_file_total_size,
+                source_file_length: data.source_file_total_extrusion_length,
+                target_file_length: data.target_file_total_extrusion_length,
+                source_file_count: data.source_file_total_extrusion_count,
+                target_file_count: data.target_file_total_extrusion_count,
+                statistics_text: data.segment_extrusion_statistics_text,
+            });
+            self.retraction_statistics.update({
+                source_file_size: data.source_file_total_size,
+                target_file_size: data.target_file_total_size,
+                source_file_length: data.source_file_total_retraction_length,
+                target_file_length: data.target_file_total_retraction_length,
+                source_file_count: data.source_file_total_retraction_count,
+                target_file_count: data.target_file_total_retraction_count,
+                statistics_text: data.segment_retraction_statistics_text,
+            });
+            self.travel_statistics.update({
+                source_file_size: data.source_file_total_size,
+                target_file_size: data.target_file_total_size,
+                source_file_length: data.source_file_total_travel_length,
+                target_file_length: data.target_file_total_travel_length,
+                source_file_count: data.source_file_total_travel_count,
+                target_file_count: data.target_file_total_travel_count,
+                statistics_text: data.segment_travel_statistics_text,
+            });
+            // Unique Id
+            self.guid(data.guid);
+        };
+        return self;
+    }
 
     ArcWelder.ArcWelderViewModel = function (parameters) {
         var self = this;
+        ArcWelder.Tab = self;
         // variable to hold the settings view model.
         self.settings = parameters[0];
         // variables to hold info from external viewmodels
@@ -162,40 +1033,82 @@ $(function () {
         self.printer_state = parameters[3];
 
         self.plugin_settings = null;
-        self.preprocessing_job_guid = null;
         self.pre_processing_progress = null;
         self.version = ko.observable();
         self.git_version = ko.observable();
         self.selected_filename = ko.observable();
         self.selected_file_is_new = ko.observable(false);
-        self.statistics_shown = ko.observable(null);
+
+        self.welded_no_statistics = ko.observable(false);
+        self.statistics_available = ko.observable(null);
         self.current_statistics_file = ko.observable();
-        self.statistics = {};
-        self.statistics.gcodes_processed = ko.observable();
-        self.statistics.lines_processed = ko.observable();
-        self.statistics.points_compressed = ko.observable();
-        self.statistics.arcs_created = ko.observable();
-        self.statistics.source_file_size = ko.observable();
-        self.statistics.target_file_size = ko.observable();
-        self.statistics.compression_ratio = ko.observable().extend({arc_welder_numeric: 1});
-        self.statistics.compression_percent = ko.observable().extend({arc_welder_numeric: 1});
-        self.statistics.source_filename = ko.observable();
-        self.statistics.target_filename = ko.observable();
 
-        self.statistics.segment_statistics_text = ko.observable();
-        self.current_files = null;
+        /* State Observables */
+        self.is_processing = ko.observable(false);
+        self.has_statistics = ko.observable(false);
+        self.is_selected_file_welded = ko.observable(null);
 
-        self.statistics_shown.subscribe(
-        function(newValue)
-        {
-            self.toggleStatistics(newValue);
+        self.selected_file_statistics = new ArcWelder.StatisticsViewModel(false);
+        self.processing_statistics  = new ArcWelder.StatisticsViewModel(true);
+
+        /* Firmware Observables */
+        self.firmware_info = new ArcWelder.FirmwareViewModel()
+        self.queued_not_processing = ko.observable(false);
+        self.preprocessing_tasks = ko.observableArray([]);
+        var initial_preprocessing_tasks_visible = ArcWelder.getLocalStorage("show_preprocessing_tasks") !== "false";
+        self.current_tasks_visible = ko.observable(initial_preprocessing_tasks_visible);
+        self.current_tasks_visible.subscribe(function(newValue) {
+            ArcWelder.setLocalStorage("show_preprocessing_tasks", newValue ? "true" : "false")
         });
-        self.current_statistics_file.subscribe(
-        function(newValue) {
+
+        self.preprocessing_tasks.subscribe(function(newValue){
+            var is_processing;
+            for(var index=0; index < newValue.length; index++)
+            {
+                if (newValue[index].is_processing)
+                {
+                    is_processing = true;
+                    break;
+                }
+            }
+            self.is_processing(is_processing);
+            self.queued_not_processing(!is_processing && newValue.length > 0);
+        });
+
+        var initial_run_configuration_visible = ArcWelder.getLocalStorage("run_configuration_visible") !== "false";
+        self.run_configuration_visible = ko.observable(initial_run_configuration_visible);
+        self.run_configuration_visible.subscribe(function(newValue){
+            var storage_value = newValue ? 'true' : 'false';
+            ArcWelder.setLocalStorage("run_configuration_visible", storage_value);
+        });
+
+        var initial_firmware_compatibility_visible = ArcWelder.getLocalStorage("firmware_compatibility_visible") !== "false";
+        self.firmware_compatibility_visible = ko.observable(initial_firmware_compatibility_visible);
+        self.firmware_compatibility_visible.subscribe(function(newValue){
+            var storage_value = newValue ? 'true' : 'false';
+            ArcWelder.setLocalStorage("firmware_compatibility_visible", storage_value);
+        });
+
+        var initial_file_statistics_visible = ArcWelder.getLocalStorage("file_statistics_visible") !== "false";
+        self.file_statistics_visible = ko.observable(initial_file_statistics_visible);
+        self.file_statistics_visible.subscribe(function(newValue){
+            var storage_value = newValue ? 'true' : 'false';
+            ArcWelder.setLocalStorage("file_statistics_visible", storage_value);
+        });
+
+        self.current_statistics_file.subscribe(function(newValue) {
             self.loadStats(newValue);
             ArcWelder.setLocalStorage("stat_file_path", newValue.path)
             ArcWelder.setLocalStorage("stat_file_origin", newValue.origin);
         });
+
+        self.firmware_compensation_enabled = ko.pureComputed(function(){
+            return self.plugin_settings.firmware_compensation_enabled()
+                && self.plugin_settings.min_arc_segments() > 0
+                && self.plugin_settings.mm_per_arc_segment() > 0;
+        });
+
+
 
         self.selected_filename_title = ko.pureComputed(function() {
             var title = "Selected";
@@ -204,32 +1117,135 @@ $(function () {
                 title = "Processed";
             }
             return title;
-        })
-        self.auto_pre_processing_enabled = ko.pureComputed(function(){
-            var file_processing_type = self.plugin_settings.feature_settings.file_processing();
-            return file_processing_type === ArcWelder.FILE_PROCESSING_AUTO ||
-                file_processing_type === ArcWelder.FILE_PROCESSING_BOTH;
         });
 
-        self.manual_pre_processing_enabled = ko.pureComputed(function(){
-            var file_processing_type = self.plugin_settings.feature_settings.file_processing();
-            return file_processing_type === ArcWelder.FILE_PROCESSING_MANUAL ||
-                file_processing_type === ArcWelder.FILE_PROCESSING_BOTH;
-        });
-
-        self.source_file_delete_description = ko.pureComputed(function(){
-            delete_setting = self.plugin_settings.feature_settings.delete_source();
-            switch(delete_setting)
+        self.processing_task = ko.pureComputed(function(){
+            for (var index=0; index < self.preprocessing_tasks().length; index++)
             {
-                case ArcWelder.SOURCE_FILE_DELETE_AUTO:
-                    return "Only automatically processed source files will be deleted.";
-                case ArcWelder.SOURCE_FILE_DELETE_MANUAL:
-                    return "Only manually processed source files will be deleted.";
-                case ArcWelder.SOURCE_FILE_DELETE_BOTH:
-                    return "The source file will be deleted.";
-                default:
-                   return "The source file will not be deleted";
+                if (self.preprocessing_tasks()[index].is_processing)
+                {
+                    return self.preprocessing_tasks()[index];
+                }
             }
+            return false;
+        });
+
+        self.processing_task_file_name = ko.pureComputed(function(){
+            if (self.processing_task())
+            {
+                return self.processing_task().task.octoprint_args.source_name;
+            }
+            return "";
+        });
+
+        self.queued_tasks = ko.pureComputed(function(){
+            var tasks = []
+            for (var index=0; index < self.preprocessing_tasks().length; index++)
+            {
+                if (self.preprocessing_tasks()[index].is_processing)
+                {
+                    continue;
+                }
+                tasks.push(self.preprocessing_tasks()[index])
+            }
+            return tasks;
+        });
+
+        self.default_xyz_precision = ko.pureComputed(function(){
+            var precision = self.plugin_settings.default_xyz_precision();
+            if (!precision)
+            {
+                precision = 3;
+            }
+
+            return self.get_precision(precision);
+        });
+
+        self.default_e_precision = ko.pureComputed(function(){
+            var precision = self.plugin_settings.default_e_precision();
+            if (!precision)
+            {
+                precision = 5;
+            }
+            return self.get_precision(precision);
+        });
+
+        self.get_precision = function (default_precision)
+        {
+            if (default_precision < 3)
+            {
+                default_precision = 3;
+            }
+            else if (default_precision > 6)
+            {
+                default_precision = 6;
+            }
+            return default_precision;
+        };
+
+        self.max_gcode_length_string = ko.pureComputed(function(){
+            var max_gcode_length_string = "Unlimited";
+            var max_gcode_length = self.plugin_settings.max_gcode_length();
+            if (max_gcode_length && max_gcode_length > 0) {
+                max_gcode_length_string = max_gcode_length.toString() + " characters";
+                if (max_gcode_length < 55)
+                {
+                    max_gcode_length_string += " (values below 55 are not recommended)"
+                }
+            }
+            return max_gcode_length_string;
+        });
+        self.max_radius_mm_string = ko.pureComputed(function(){
+            var max_radius_mm_string = "Default";
+            var max_radius_mm = self.plugin_settings.max_radius_mm();
+            if (max_radius_mm && max_radius_mm > 0) {
+                max_radius_mm_string = max_radius_mm.toString() + "mm";
+                if (max_radius_mm > 9999)
+                {
+                    max_radius_mm_string += " (values above 9999 are not recommended)"
+                }
+                else if (max_radius_mm < 999)
+                {
+                    max_radius_mm_string += " (values below 999 are not recommended)"
+                }
+            }
+            return max_radius_mm_string;
+        });
+
+        self.file_processing_setting_name = ko.pureComputed(function(){
+            return ArcWelder.getOptionNameForValue(
+                ArcWelder.FILE_PROCESSING_OPTIONS
+                ,self.plugin_settings.feature_settings.file_processing()
+            );
+        });
+        // Auto Select
+        self.select_file_setting_name = ko.pureComputed(function(){
+            return ArcWelder.getOptionNameForValue(
+                ArcWelder.SELECT_FILE_AFTER_PROCESSING_OPTIONS
+                ,self.plugin_settings.feature_settings.select_after_processing()
+            );
+        });
+
+        self.print_file_setting_name = ko.pureComputed(function(){
+            return ArcWelder.getOptionNameForValue(
+                ArcWelder.PRINT_AFTER_PROCESSING_OPTIONS
+                ,self.plugin_settings.feature_settings.print_after_processing()
+            );
+        });
+
+        self.source_file_delete_setting_name = ko.pureComputed(function(){
+            var name = ArcWelder.getOptionNameForValue(
+                ArcWelder.SOURCE_FILE_DELETE_OPTIONS
+                ,self.plugin_settings.feature_settings.delete_source()
+            );
+            return name;
+        });
+
+        self.overwrite_source_file = ko.pureComputed(function(){
+            return (
+                self.plugin_settings.overwrite_source_file() ||
+                (self.plugin_settings.target_prefix() == "" && self.plugin_settings.target_postfix() == "")
+            );
         });
 
         self.github_link = ko.pureComputed(function(){
@@ -254,13 +1270,18 @@ $(function () {
 
         self.onBeforeBinding = function () {
             // Make plugin setting access a little more terse
-            self.plugin_settings = self.settings.settings.plugins.arc_welder;
+            //self.plugin_settings = self.settings.settings.plugins.arc_welder;
+            // Update - We want to make a copy here so that only saved changes propogate to the tab
+            self.plugin_settings = ko.mapping.fromJS(ko.mapping.toJS(self.settings.settings.plugins.arc_welder));
+
+            self.octoprint_settings = self.settings.settings;
             self.version(self.plugin_settings.version());
             self.git_version(self.plugin_settings.git_version());
         };
 
         self.onAfterBinding = function() {
-            ArcWelder.Help.bindHelpLinks("#tab_plugin_arc_welder_controls");
+            ArcWelder.Help.bindHelpLinks(ArcWelder.tabDivSelector);
+            self.plugin_settings.path_tolerance_percent.extend({arc_welder_numeric: 1});
         };
 
         self.onStartupComplete = function() {
@@ -288,22 +1309,13 @@ $(function () {
                     }
                 }
             }, this);
-            var show_stats = ArcWelder.getLocalStorage("show_stats") == "true";
-            self.statistics_shown(show_stats);
+            self.firmware_info.getFirmwareVersion();
+            self.getPreprocessingTasks();
         };
 
-        self.closePreprocessingPopup = function(){
-            if (self.pre_processing_progress != null) {
-                self.pre_processing_progress.close();
-            }
-            self.preprocessing_job_guid = null;
-            self.pre_processing_progress = null;
-        };
-
-        self.showHideStatsBtnClicked = function(){
-            var shown = !self.statistics_shown(); // what????
-            self.statistics_shown(shown);
-            ArcWelder.setLocalStorage("show_stats", shown);
+        self.onDataUpdaterReconnect = function () {
+            self.firmware_info.getFirmwareVersion();
+            self.getPreprocessingTasks();
         };
 
         self.toggleStatistics = function(show) {
@@ -326,24 +1338,13 @@ $(function () {
         };
 
         self.loadStats = function(file_data) {
-            // Hide everything to start.
-            var $statsButton = $("#arc-welder-show-statistics-btn");
-            var $statsDiv = $("#arc-welder-stats");
-            var $statsNoStatsDiv = $statsDiv.find("#arc-welder-no-stats-div");
-            var $statsTextDiv = $statsDiv.find("#arc-welder-stats-text-div");
-
-            // Hide all the divs and clear text
-            $statsTextDiv.hide();
-            $statsDiv.hide();
-            $statsNoStatsDiv.hide();
-            $statsButton.hide();
-
             var filename, is_welded, statistics, is_new;
-
+            self.statistics_available(false);
+            self.selected_file_is_new(false);
             if (file_data.arc_welder_statistics) {
-                var filename = file_data.name;
                 var is_welded = true;
                 var statistics = file_data.arc_welder_statistics;
+                var filename = statistics.target_name;
                 is_new = true;
             } else
             {
@@ -351,52 +1352,48 @@ $(function () {
                 var file = self.getFile(file_data);
                 if (!file)
                 {
-                    self.toggleStatistics(false);
-                    ArcWelder.setLocalStorage("show_stats", false);
                     return;
                 }
                 filename = file.name;
-                is_welded = file.arc_welder;
+                is_welded = file.arc_welder
+
                 statistics = file.arc_welder_statistics;
             }
-
-
             // Update the UI
             self.selected_filename(filename);
             self.selected_file_is_new(is_new);
+            self.is_selected_file_welded(is_welded);
             if (statistics)
             {
-                self.statistics.gcodes_processed(statistics.gcodes_processed);
-                self.statistics.lines_processed(statistics.lines_processed);
-                self.statistics.points_compressed(statistics.points_compressed);
-                self.statistics.arcs_created(statistics.arcs_created);
-                self.statistics.source_file_size(ArcWelder.toFileSizeString(statistics.source_file_size, 1));
-                self.statistics.target_file_size(ArcWelder.toFileSizeString(statistics.target_file_size));
-                self.statistics.compression_ratio(statistics.compression_ratio);
-                self.statistics.compression_percent(statistics.compression_percent);
-                self.statistics.source_filename(statistics.source_filename);
-                self.statistics.target_filename(statistics.target_filename);
-                self.statistics.segment_statistics_text(statistics.segment_statistics_text);
+                self.has_statistics(true);
+                self.selected_file_statistics.update(statistics);
             }
             if (is_welded)
             {
-                $statsDiv.show();
-                $statsButton.show();
                 if (statistics)
                 {
-                    $statsTextDiv.show();
+                    self.statistics_available(true);
                 }
                 else
                 {
-                    $statsNoStatsDiv.show();
+                    self.statistics_available(false);
                 }
             }
 
         };
 
+        self.updateArcwelderSettings = function(settings)
+        {
+            ko.mapping.fromJS(ko.mapping.toJS(settings), self.plugin_settings);
+
+        }
         // receive events
         self.onEventFileSelected = function(payload) {
             self.current_statistics_file(payload);
+        }
+
+        self.onEventSettingsUpdated = function(payload) {
+            self.updateArcwelderSettings(self.settings.settings.plugins.arc_welder);
         }
         // Handle Plugin Messages from Server
 
@@ -417,14 +1414,71 @@ $(function () {
                         }
                     };
 
+
                     PNotifyExtensions.displayPopupForKey(
                         options,
                         ArcWelder.PopupKey(data.key),
                         ArcWelder.PopupKey(data.close_keys)
                     );
                     break;
+                case "setting-errors":
+                    var options = {
+                        title: "Arcwelder Settings Error",
+                        text: "Some settings were not saved:\n" + data.data.join('\n') + "\nAll settings above have been reset to their previous value.",
+                        type: "error",
+                        hide: false,
+                        addclass: "arc-welder",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+
+
+                    PNotifyExtensions.displayPopupForKey(
+                        options,
+                        ArcWelder.PopupKey(data.key),
+                        ArcWelder.PopupKey(data.close_keys)
+                    );
+                    break;
+                case "task-queued":
+                    if (self.plugin_settings.notification_settings.show_queued_notification()) {
+                        var options = {
+                            title: "Arc Welder - Task Queued",
+                            text: data.message,
+                            type: "info",
+                            hide: true,
+                            addclass: "arc-welder",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        PNotifyExtensions.displayPopupForKey(options, ArcWelder.PopupKey("task-queued"), []);
+                    }
+                    break;
                 case "preprocessing-start":
-                    self.createProgressPopup(data.preprocessing_job_guid, data.source_filename);
+                    if (self.plugin_settings.notification_settings.show_started_notification()){
+                        var options = {
+                            title: "Arc Welder - Processing Started",
+                            text: data.message,
+                            type: "info",
+                            hide: true,
+                            addclass: "arc-welder",
+                            desktop: {
+                                desktop: true
+                            }
+
+                        };
+                        PNotifyExtensions.displayPopupForKey(
+                            options,
+                            ArcWelder.PopupKey("preprocessing-start"),
+                            [
+                                ArcWelder.PopupKey('task-queued'),
+                                ArcWelder.PopupKey('preprocessing-start')
+                        ]);
+                    }
+
+                    self.processing_statistics.progress_statistics.percent_complete(0);
+                    // This file should be processing now hopefully...  will see
                     break;
                 case "preprocessing-failed":
                     var options = {
@@ -438,13 +1492,12 @@ $(function () {
                         }
                     };
                     PNotifyExtensions.displayPopupForKey(options, ArcWelder.PopupKey("preprocessing-failed"), []);
-                    self.closePreprocessingPopup();
                     break;
                 case "preprocessing-cancelled":
                     var options = {
                         title: "Arc Welder - Cancelled",
                         text: data.message,
-                        type: "info",
+                        type: "warning",
                         hide: true,
                         addclass: "arc-welder",
                         desktop: {
@@ -452,153 +1505,132 @@ $(function () {
                         }
                     };
                     PNotifyExtensions.displayPopupForKey(options, ArcWelder.PopupKey("preprocessing-cancelled"), []);
-                    self.closePreprocessingPopup();
                     break;
-                case "preprocessing-success":
-                    self.closePreprocessingPopup();
-                    //  Load all stats for the newly processed file
-                    self.current_statistics_file(data);
-
-                    var metadata = data.arc_welder_statistics;
-                    var seconds_elapsed = metadata.seconds_elapsed;
-                    var arcs_created = metadata.arcs_created;
-                    var points_compressed = metadata.points_compressed;
-                    var source_file_size = metadata.source_file_size;
-                    var target_file_size = metadata.target_file_size;
-                    var compression_ratio = metadata.compression_ratio;
-                    var compression_percent = metadata.compression_percent;
-                    var space_saved_string = ArcWelder.toFileSizeString(source_file_size - target_file_size, 1);
-                    var source_size_string = ArcWelder.toFileSizeString(source_file_size, 1);
-                    var target_size_string = ArcWelder.toFileSizeString(target_file_size, 1);
-                    var file_name_html = "";
-                    if (metadata.source_filename == metadata.target_filename)
-                    {
-                        file_name_html = "<div><strong>File:</strong> " + metadata.source_filename + "<div>";
-                    }
-                    else
-                    {
-                        file_name_html = "<div><strong>Source File:</strong> " + metadata.source_filename + "<div>" +
-                            "<div><strong>Target File:</strong> " + metadata.target_filename + "<div>";
-                    }
-                    var progress_text =
-                            file_name_html + "<div><strong>Time:</strong> " + ArcWelder.ToTimer(seconds_elapsed) + "</div><div class='row-fluid'><span class='span5'><strong>Arcs Created</strong><br/>" + arcs_created.toString() + "</span>"
-                            + "<span class='span7'><strong>Points Compressed</strong><br/>" + points_compressed.toString() + "</span></div>"
-                            + "<div class='row-fluid'><div class='span5'><strong>Compression</strong><br/> Ratio: " + compression_ratio.toFixed(1) + " - " + compression_percent.toFixed(1) + "%</div><div class='span7'><strong>Space</strong><br/>"+ source_size_string + " - " + space_saved_string + " = " + target_size_string + "</div></div>";
+                case "all-preprocessing-cancelled":
                     var options = {
-                        title: "Arc Welder Preprocessing Complete",
-                        text: progress_text,
-                        type: "success",
+                        title: "Arc Welder - All Tasks Cancelled",
+                        text: data.message,
+                        type: "warning",
                         hide: true,
-                        addclass: "arc-welder",
-
-                    };
-                    PNotifyExtensions.displayPopupForKey(options, ArcWelder.PopupKey("preprocessing-success"));
-                    progress_text =
-                        "Preprocessing completed in " + ArcWelder.ToTimer(seconds_elapsed) + " seconds.  " + arcs_created.toString() + " arcs were created and "
-                        + points_compressed.toString() + " points were compressed.";
-                    options = {
-                        title: "Arc Welder Preprocessing Complete",
-                        text: "Preprocessing Completed",
-                        type: "success",
-                        hide: false,
-                        desktop: {
-                            desktop: true,
-                            fallback: false
-                        }
-                    };
-                    PNotifyExtensions.displayPopupForKey(
-                        options,
-                        ArcWelder.PopupKey("preprocessing-success-desktop"),
-                        []
-                    );
-                    break;
-                case "preprocessing-complete":
-                    self.closePreprocessingPopup();
-                    break;
-                case "preprocessing-progress":
-                    // TODO: CHANGE THIS TO A PROGRESS INDICATOR
-                    var progress = data;
-                    var seconds_elapsed = progress.seconds_elapsed;
-                    var seconds_remaining = progress.seconds_remaining;
-                    var percent_complete = progress.percent_complete;
-                    var arcs_created = progress.arcs_created;
-                    var points_compressed = progress.points_compressed;
-                    var source_file_size = progress.source_file_size;
-                    var target_file_size = progress.target_file_size;
-                    var compression_ratio = progress.compression_ratio;
-                    var compression_percent = progress.compression_percent;
-                    var source_file_position = progress.source_file_position;
-                    var space_saved_string = ArcWelder.toFileSizeString(source_file_size - target_file_size, 1);
-                    var source_position_string = ArcWelder.toFileSizeString(source_file_position, 1);
-                    var target_size_string = ArcWelder.toFileSizeString(target_file_size, 1);
-
-                    if (self.pre_processing_progress == null){
-                        self.createProgressPopup(data.preprocessing_job_guid, data.source_filename);
-                    }
-
-                    var progress_text =
-                          "<div class='row-fluid'>"
-                        + "<span class='span5'><strong>Remaining:&nbsp;</strong>" + ArcWelder.ToTimer(seconds_remaining) + "<br/> <strong>Arcs Created</strong><br/>" + arcs_created.toString() + "</span>"
-                        + "<span class='span7'><strong>Elapsed:</strong>&nbsp;" + ArcWelder.ToTimer(seconds_elapsed) + "<br/><strong>Points Compressed</strong><br/>" + points_compressed.toString() + "</span>"
-                        + "<div/>"
-                        + "<div class='row-fluid'>"
-                        + "<div class='span5'><strong>Compression</strong><br/> Ratio: " + compression_ratio.toFixed(1) + " - " + compression_percent.toFixed(1) + "%</div>"
-                        + "<div class='span7'><strong>Space</strong><br/>"+ source_position_string + " - " + space_saved_string + " = " + target_size_string + "</div>"
-                        + "</div>";
-                        //+ "  Line:" + lines_processed.toString()
-                        //+ "<div class='row-fluid'><span class='span6'><strong>Arcs Created</strong><br/>" + arcs_created.toString() + "</span>"
-                        //+ "<span class='span6'><strong>Points Compressed</strong><br/>" + points_compressed.toString() + "</span><div/>";
-                    self.pre_processing_progress = self.pre_processing_progress.update(
-                        percent_complete, progress_text
-                    );
-                    break;
-                default:
-                    var options = {
-                        title: "Arc Welder Error",
-                        text: "An unknown message was received.  This popup should have been removed prior to release.",
-                        type: "error",
-                        hide: false,
                         addclass: "arc-welder",
                         desktop: {
                             desktop: true
                         }
                     };
-                    PNotifyExtensions.displayPopupForKey(
-                        options,
-                        ArcWelder.PopupKey("unknown_message_type"),
-                        ArcWelder.PopupKey(["unknown_message_type"])
-                    );
+                    PNotifyExtensions.displayPopupForKey(options, ArcWelder.PopupKey("preprocessing-cancelled"), []);
+                    break;
+                case "preprocessing-success":
+                    if (self.plugin_settings.notification_settings.show_completed_notification()) {
+                        //  Load all stats for the newly processed file
+                        var message = "Sucessfully welded file:  " + data.task.octoprint_args.target_name;
+                        var options = {
+                            title: "Arc Welder - Processing Success",
+                            text: message,
+                            type: "success",
+                            hide: true,
+                            addclass: "arc-welder",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        PNotifyExtensions.displayPopupForKey(options, ArcWelder.PopupKey("preprocessing-success"), []);
+                    }
+                    self.current_statistics_file(data);
+                    break;
+                case "preprocessing-complete":
+                    self.updatePreprocessingTasks(data.preprocessing_tasks);
+                    break;
+                case "preprocessing-progress":
+                    var progress = data;
+                    self.updateProcessProgress(progress);
+
+                    break;
+                case "preprocessing-tasks-changed":
+                    self.updatePreprocessingTasks(data.preprocessing_tasks);
+                    break;
+                case "firmware-info-update":
+                    // Update the firmware info
+                    self.firmware_info.update(data.firmware_info, data.firmware_types_info)
+                    // signal that the check is finished.
+                    self.firmware_info.checking_firmware(false);
+                    break;
+                default:
+                    loger.error("Arc Welder receied an unknown event: " + data.message_type);
             }
         };
 
-        self.createProgressPopup = function(preprocessing_job_guid, source_filename) {
-            if (self.pre_processing_progress == null)
-                self.closePreprocessingPopup();
-            self.preprocessing_job_guid = preprocessing_job_guid;
-            var cancel_callback = null;
-            var cancel_all_callback = null;
-            if (self.login_state.isAdmin()){
-                cancel_callback = self.cancelPreprocessing;
-                cancel_all_callback = self.cancelAllPreprocessing;
-            }
-            var subtitle = "<strong>Processing:</strong> " + source_filename;
-            self.pre_processing_progress = PNotifyExtensions.progressBar("Initializing...", "Arc Welder Progress",
-                subtitle, cancel_callback, "Cancel All", cancel_all_callback);
-        };
+        self.updateProcessProgress = function(progress){
+            self.processing_statistics.update(progress);
+        }
+
+        self.getPreprocessingTasks = function() {
+            $.ajax({
+                url: ArcWelder.APIURL("getPreprocessingTasks"),
+                type: "POST",
+                tryCount: 0,
+                retryLimit: 3,
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    var message = "Could not retrieve preprocessing tasks.  Status: " + textStatus + ".  Error: " + errorThrown;
+                    console.error(message);
+                    return false;
+                }
+            });
+        }
+
+        self.updatePreprocessingTasks = function(preprocessing_tasks){
+            self.preprocessing_tasks(preprocessing_tasks);
+            self.addProcessButtonToFileManager(self.files.listHelper.paginatedItems(), self.printer_state.isPrinting());
+        }
+
+        self.getFirmwareVersion = function() {
+            $.ajax({
+                url: ArcWelder.APIURL("getFirmwareVersion"),
+                type: "POST",
+                tryCount: 0,
+                retryLimit: 3,
+                contentType: "application/json",
+                success: function(data) {
+                    var firmware_info = false;
+                    var firmware_types_version = data.firmware_types_version;
+                    if (data.success)
+                    {
+                       firmware_info = data.firmware_info;
+                    }
+                    self.update(firmware_info, firmware_types_version);
+
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    var message = "Could not retrieve firmware data.  Status: " + textStatus + ".  Error: " + errorThrown;
+                    console.error(message);
+                    return false;
+                }
+            });
+        }
 
         self.cancelAllPreprocessing = function() {
-            self.cancelPreprocessingRequest(true);
+            self.cancelPreprocessingRequest({"cancel_all": true});
         };
 
-        self.cancelPreprocessing = function () {
-            self.cancelPreprocessingRequest(false);
+        self.cancelPreprocessing = function (task_info) {
+
+            self.cancelPreprocessingRequest(task_info);
+            return false;
         };
 
-        self.cancelPreprocessingRequest = function(cancel_all){
-            var data = {
-                "cancel_all": cancel_all,
-                "preprocessing_job_guid": self.preprocessing_job_guid
-            };
+        self.cancelPreprocessingRequest = function(task_info){
+            var data = {};
+            if ("cancel_all" in task_info)
+            {
+                data = {
+                    "cancel_all": true,
+                };
+            }
+            else {
+                data = {
+                    "guid": task_info.task.guid,
+                };
+            }
+
             $.ajax({
                 url: ArcWelder.APIURL("cancelPreprocessing"),
                 type: "POST",
@@ -607,9 +1639,6 @@ $(function () {
                 contentType: "application/json",
                 data: JSON.stringify(data),
                 dataType: "json",
-                success: function() {
-                    self.closePreprocessingPopup();
-                },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     var message = "Could not cancel preprocessing.  Status: " + textStatus + ".  Error: " + errorThrown;
                     var options = {
@@ -632,8 +1661,10 @@ $(function () {
             });
         }
 
-        self.removeEditButtons = function() {
+        self.removeFileManagerItems = function() {
             $("#files div.gcode_files div.entry .action-buttons div.arc-welder").remove();
+            $("#files div.gcode_files div.entry span.arc-welder.info+br").remove();
+            $("#files div.gcode_files div.entry span.arc-welder.info").remove();
         };
 
         self.getEntryId = function(file){
@@ -641,15 +1672,13 @@ $(function () {
         };
 
         self.addProcessButtonToFileManager = function(current_page, is_printing) {
-            self.removeEditButtons();
-            if (!self.manual_pre_processing_enabled())
-                return;
-            console.log("Adding Buttons");
+            self.removeFileManagerItems();
+            //console.log("Adding Buttons");
             for(var file_index=0; file_index < current_page.length; file_index++)
             {
                 // Get the current file
                 var file = current_page[file_index];
-                console.log("Adding Buttons for file with hash: " + file.hash);
+                // console.log("Adding Buttons for file with hash: " + file.hash);
                 // Only process machine code
                 if (file.type !== "machinecode")
                     continue;
@@ -661,47 +1690,119 @@ $(function () {
                     continue;
 
                 var is_welded = false;
+                var is_queued = false;
+                var is_processing = false;
                 var disable = false;
+                var skip_button = false;
                 var title = "Weld Arcs";
+                /* We are going to try letting them queue the file, but we have to show a list of
+                // queued items.
                 if (is_printing)
                 {
                     title = "Cannot weld arcs during a print, this would impact performance.";
-                }
-                else if (file.origin !== "local")
+                    disable = true;
+                }*/
+
+                if (file.origin !== "local")
                 {
                     disable = true;
                     title = "Cannot weld arcs for files stored on your printer's SD card.";
                 }
-                else {
+                if (file.arc_welder)
+                {
+                    disable = false;
+                    is_welded = true;
+                    // add additional info
+                    var reduction_string = "";
 
-                    if (file.arc_welder)
+                    if (file.arc_welder_statistics)
                     {
-                        is_welded = true;
-                        title = "View Arc-Welder statistics for this file.";
+                        var percent = file.arc_welder_statistics.total_count_reduction_percent;
+                        if (percent)
+                        {
+                            is_down = percent < 0;
+                            percent = Math.abs(percent);
+                            reduction_string = ": " + (is_down? "<strong>&darr;</strong>" : "") + percent.toFixed(1) + "%";
+                        }
+                    }
+                    var $weldedInfo = $('<span class="arc-welder info">Arc Welded'
+                        + reduction_string
+                        +'</span><br/>');
+                    $(file_element).find(".additionalInfo").append($weldedInfo);
+                    if (!file.arc_welder_statistics)
+                    {
+                        skip_button = true;
+                    }
+                    title = "View Arc-Welder statistics for this file.";
+                }
+                else {
+                    // This file is not welded, see if it is queued or processing
+                    if (self.preprocessing_tasks().length > 0)
+                    {
+                        for (var index = 0; index < self.preprocessing_tasks().length; index++)
+                        {
+                            var task_info = self.preprocessing_tasks()[index];
+                            if ('/'+file.path == task_info.task.octoprint_args.source_path)
+                            {
+                                disable = true;
+                                if (task_info.is_processing)
+                                {
+                                    is_processing = true;
+                                    title = "Arc welder is currently processing this file.  See the tab for details."
+                                }
+                                else
+                                {
+                                    is_queued = true;
+                                    title = "Arc welder has queued this file.  See the tab for details."
+                                }
+                            }
+                        }
                     }
                 }
 
                 // Create the button
+                if (skip_button)
+                {
+                    continue;
+                }
+                if (self.plugin_settings.enabled() || is_welded)
+                {
+                    // if arc welder is disabled, but the file is welded, we still want to show the statistics
+                    // button.
+                    var icon = "fa-compress"
+                    if (is_welded) {
+                        icon = "fa-file-text";
+                    }
+                    else if (is_queued)
+                    {
+                        icon = "fa-hourglass"
+                    }
+                    else if (is_processing)
+                    {
+                        icon = "fa-spinner fa-spin"
+                    }
 
-                var $button = $('\
-                    <div class="btn btn-mini arc-welder' + (disable ? " disabled" : "") + '" title="' + title + '">\
-                        <i class="fa ' + (is_welded ? "fa-file-text" : "fa-compress") + '"></i>\
-                    </div>\
-                ');
-                // Add an on click event if the button is not disabled
-                //if (!is_welded)
-                //{
+                    var $button = $('\
+                        <div class="btn btn-mini arc-welder' + (disable ? " disabled" : "") + '" title="' + title + '">\
+                            <i class="fa ' + icon + '"></i>\
+                        </div>\
+                    ');
 
+                    // Add an on click handler for the arc welder filemanager if it is not disabled
                     var data = {path: file.path, origin: file.origin};
-                    $button.click(data, function(e) {
-                        self.processButtonClicked(e);
-                    });
-                //}
+                    if (!disable)
+                    {
+                        $button.click(data, function(e) {
+                            self.processButtonClicked(e);
+                        });
+                    }
 
-                // Add the button to the file manager
-                $(file_element).find("a.btn-mini").after($button);
+
+                    // Add the button to the file manager
+                    $(file_element).find("a.btn-mini").after($button);
+                }
+
             }
-
         };
 
         self.recursiveFileSearch = function(root, path, origin) {
@@ -761,13 +1862,16 @@ $(function () {
                 self.current_statistics_file(file_data);
                 // Select the arc-welder tab
                 ArcWelder.openTab();
+                // Make sure the statistics panel is shown
+                self.file_statistics_visible(true);
+                self.file_statistics_visible.update_visible();
                 return;
             }
-            console.log("Button Clicked: " + file_data.path);
+            //console.log("Button Clicked: " + file_data.path);
             // disable the element
             $(event.target).addClass("disabled");
             // Request that the file be processed
-            var data = { "path": encodeURI(file_data.path), "origin": file_data.origin};
+            var data = { "path": encodeURI(file_data.path), "origin": file_data.origin, "name": encodeURI(file_data.name)};
             $.ajax({
                 url: ArcWelder.APIURL("process"),
                 type: "POST",
@@ -777,41 +1881,25 @@ $(function () {
                 data: JSON.stringify(data),
                 dataType: "json",
                 success: function(results) {
-                    if (results.success)
+                    if (!results.success)
                     {
-                        var options = {
-                            title: 'Arc Welder File Queued',
-                            text: "The file '" + file_data.path + "' has been queued for processing.",
-                            type: 'info',
-                            hide: true,
-                            addclass: "arc-welder",
-                            desktop: {
-                                desktop: true
-                            }
-                        };
-                        PNotifyExtensions.displayPopupForKey(
-                            options,
-                            ArcWelder.PopupKey("process-error"),
-                            ArcWelder.PopupKey(["process-error"])
-                        );
-                    }
-                    else
-                    {
-                        var options = {
-                            title: 'Arc Welder Error',
-                            text: results.message,
-                            type: 'error',
-                            hide: false,
-                            addclass: "arc-welder",
-                            desktop: {
-                                desktop: true
-                            }
-                        };
-                        PNotifyExtensions.displayPopupForKey(
-                            options,
-                            ArcWelder.PopupKey("process-error"),
-                            ArcWelder.PopupKey(["process-error"])
-                        );
+                        if (results.message) {
+                            var options = {
+                                title: 'Arc Welder Queue Error',
+                                text: results.message,
+                                type: 'error',
+                                hide: false,
+                                addclass: "arc-welder",
+                                desktop: {
+                                    desktop: true
+                                }
+                            };
+                            PNotifyExtensions.displayPopupForKey(
+                                options,
+                                ArcWelder.PopupKey("process-error"),
+                                ArcWelder.PopupKey(["process-error"])
+                            );
+                        }
                     }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -836,7 +1924,6 @@ $(function () {
                     return false;
                 }
             });
-
         }
     };
 
@@ -849,15 +1936,17 @@ $(function () {
             $(query).click();
         }
     };
-    ArcWelder.openTab = function()
-    {
+
+    ArcWelder.openTab = function() {
         $('#tab_plugin_arc_welder_link a').click();
     }
+    ArcWelder.tabDivId = "tab_plugin_arc_welder_controls";
+    ArcWelder.tabDivSelector = "#" + ArcWelder.tabDivId;
 
     OCTOPRINT_VIEWMODELS.push([
         ArcWelder.ArcWelderViewModel,
         ["settingsViewModel", "loginStateViewModel", "filesViewModel", "printerStateViewModel"],
-        ["#tab_plugin_arc_welder_controls"]
+        [ArcWelder.tabDivSelector]
     ]);
 });
 

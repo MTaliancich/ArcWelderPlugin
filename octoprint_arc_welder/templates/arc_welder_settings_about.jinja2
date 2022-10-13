@@ -29,6 +29,14 @@
         If you like this plugin or any of the others I've designed or contributed to (Octolapse), please consider supporting my efforts by sponsoring me on <a href="https://www.patreon.com/bePatron?u=9588101" target="_blank" title="Become a patron"><i class="fa fa-patreon"></i>Patreon</a>, <a href="https://github.com/FormerLurker" target="_blank" title="FormerLurker&#146;s Github Page"><i class="fa fa-github">&nbsp;Github</i></a>, or buy me a beer with <a href="https://paypal.me/formerlurker" target="_blank" title="Donate via PayPal"><i class="fa fa-paypal"></i>&nbsp;PayPal</a>.  I'd also appreciate if you subscribed to my <a href="https://youtube.com/c/FormerLurker" target="_blank" title="FormerLurker&#146;s YouTube Channel"><i class="fa fa-youtube"></i>&nbsp;YouTube</a> channel.  I would love to spend even more time working on open source projects, and you can help make that happen!
     </p>
     <hr/>
+    <h4>Patrons and Supporters</h4>
+    <p>
+        Thank you patrons and supporters, may you all live forever!
+    </p>
+    <p>
+        <a href="https://layerfused.com/" target="_blank"><strong>LayerFused LLC</strong></a><br/>
+    </p>
+    <hr/>
     <h4>The Stuttering Problem</h4>
     <p>
         Some users of OctoPrint have noticed a difference in print quality when printing local files.  These differences often disappear when printing from the printer's SD card.  Typically this issue can be solved, but debugging can be a challenge.  Everything from the printer's firmware configuration to the USB cable itself can contribute, and the solutions are often technically challenging, especially for newcomers.
@@ -70,6 +78,7 @@
     <p>
         Auto bed leveling isn't always supported fully when using G2/G3.  Prusa firmware specifically states (though I'm not sure if this is still true) that Auto-Bed Leveling is only implemented at the endpoints of an arc, which could cause problems if there are very long arcs in your print.  Hopefully this will be solved at some point.
     </p>
+    <p>However, since ArcWelder was initially released, many firmware developers have dramatically improved arc support.  I STRONGLY recommend you upgrade your firmware to take advantage of the new features and bugfixes.</p>
     <h4>Final Thoughts</h4>
     <p>
         If you have experienced stuttering, I want to hear how the <i>Arc Welder</i> plugin has worked for you!  Please send me the following:
@@ -80,5 +89,42 @@
         </ul>
         I would also love to hear any feedback you have, since I'm always trying to improve my plugins.
     </p>
+    <h4 data-bind="text: plugin_settings().arc_welder_lib_version_info.title"></h4>
+    <p>
+        This extension was written in C++, and is the basis for the ArcWelder Octoprint plugin.  It does the heavy
+        lifting of processing the gcode, and turning G0/G1 commands into G2/G3 commands according to the parameters supplied.
+    </p>
+    <h5>Version Information</h5>
+    <p data-bind="text: plugin_settings().arc_welder_lib_version_info.title"></p>
+    <div class="row-fluid">
+        <div class="span4 right">Author:</div>
+        <div class="span8"> <a target="_blank" data-bind="text: plugin_settings().arc_welder_lib_version_info.git_author, attr: { href: plugin_settings().arc_welder_lib_version_info.git_author_url }"></a></div>
+    </div>
+    <div class="row-fluid">
+        <div class="span4 right">Version:</div>
+        <div class="span8"> <a target="_blank" data-bind="visible: plugin_settings().arc_welder_lib_version_info.is_release(), text: plugin_settings().arc_welder_lib_version_info.git_tagged_version, attr: { href: plugin_settings().arc_welder_lib_version_info.release_url }"></a><a target="_blank" data-bind="visible: !plugin_settings().arc_welder_lib_version_info.is_release(), text: plugin_settings().arc_welder_lib_version_info.git_tagged_version, attr: { href: plugin_settings().arc_welder_lib_version_info.commit_url }"></a></div>
+    </div>
+    <div class="row-fluid" data-bind="visible: !plugin_settings().arc_welder_lib_version_info.is_release()">
+        <div class="span4 right">Closest Release:</div>
+        <div class="span8"> <a target="_blank" data-bind="text: plugin_settings().arc_welder_lib_version_info.git_tag, attr: { href: plugin_settings().arc_welder_lib_version_info.release_url }"></a></div>
+    </div>
+    <div class="row-fluid">
+        <div class="span4 right">Branch:</div>
+        <div class="span8"><span data-bind="text:  plugin_settings().arc_welder_lib_version_info.git_branch"></span></div>
+    </div>
+    <div class="row-fluid">
+        <div class="span4 right">Build Date:</div>
+        <div class="span8"><span data-bind="text:  plugin_settings().arc_welder_lib_version_info.build_date"></span></div>
+    </div>
+    <h5>Included Libraries</h5>
+    <p>
+        A couple external libraries are included in ArcWelder:
+    </p>
+    <p>
+        Fpconv float to string conversion - <a href="https://github.com/miloyip/dtoa-benchmark/blob/master/license.txt" target="_blank">Copyright (C) 2014 Milo Yip</a><br/>
+        The original fpconv algorithm - <a href="https://github.com/miloyip/dtoa-benchmark/blob/master/src/fpconv/license" target="_blank">Copyright(c) 2013 Andreas Samoljuk</a><br/>
+    </p>
+    <p>In addition, the console version includes the powerful command line argument processing tool <a href="http://tclap.sourceforge.net/" target="_blank">TCLAP</a>.  Even though this is not used in the ArcWelder Plugin plugin, I want to give this library some much deserved love!</p>
+
 
 </script>

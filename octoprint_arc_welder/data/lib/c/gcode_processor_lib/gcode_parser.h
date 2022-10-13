@@ -3,7 +3,7 @@
 //
 // Tools for parsing gcode and calculating printer state from parsed gcode commands.
 //
-// Copyright(C) 2020 - Brad Hochgesang
+// Copyright(C) 2021 - Brad Hochgesang
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This program is free software : you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -44,7 +44,7 @@ private:
 	std::set<std::string> text_only_functions_;
 	std::set<std::string> parsable_commands_;
 	// Functions
-	bool try_extract_double(char ** p_p_gcode, double * p_double) const;
+	bool try_extract_double(char ** p_p_gcode, double * p_double, unsigned char * p_precision) const;
 	static bool try_extract_gcode_command(char ** p_p_gcode, std::string * p_command);
 	static bool try_extract_text_parameter(char ** p_p_gcode, std::string * p_parameter);
 	bool try_extract_parameter(char ** p_p_gcode, parsed_command_parameter * parameter) const;

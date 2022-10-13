@@ -4,7 +4,7 @@
 // Compresses many G0/G1 commands into G2/G3(arc) commands where possible, ensuring the tool paths stay within the specified resolution.
 // This reduces file size and the number of gcodes per second.
 //
-// Copyright(C) 2020 - Brad Hochgesang
+// Copyright(C) 2021 - Brad Hochgesang
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This program is free software : you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -119,7 +119,7 @@ void py_logger::set_internal_log_levels(bool check_real_time)
 	
 void py_logger::log_exception(const int logger_type, const std::string& message)
 {
-	log(logger_type, ERROR, message, true);
+	log(logger_type, log_levels::ERROR, message, true);
 }
 
 void py_logger::log(const int logger_type, const int log_level, const std::string& message)
@@ -176,24 +176,24 @@ void py_logger::log(const int logger_type, const int log_level, const std::strin
 	}
 	else
 	{
-		switch (log_level)
+		switch ((log_levels)log_level)
 		{
-		case INFO:
+		case log_levels::INFO:
 			pyFunctionName = py_info_function_name;
 			break;
-		case WARNING:
+		case log_levels::WARNING:
 			pyFunctionName = py_warn_function_name;
 			break;
-		case ERROR:
+		case log_levels::ERROR:
 			pyFunctionName = py_error_function_name;
 			break;
-		case DEBUG:
+		case log_levels::DEBUG:
 			pyFunctionName = py_debug_function_name;
 			break;
-		case VERBOSE:
+		case log_levels::VERBOSE:
 			pyFunctionName = py_verbose_function_name;
 			break;
-		case CRITICAL:
+		case log_levels::CRITICAL:
 			pyFunctionName = py_critical_function_name;
 			break;
 		default:
@@ -203,7 +203,9 @@ void py_logger::log(const int logger_type, const int log_level, const std::strin
 			return;
 		}
 	}
+	//PyObject* pyMessage = gcode_arc_converter::PyBytesOrString_FromString(message);
 	PyObject* pyMessage = gcode_arc_converter::PyUnicode_SafeFromString(message);
+	
 	if (pyMessage == NULL)
 	{
 		std::cout << "Unable to convert the log message '" << message.c_str() << "' to a PyString/Unicode message.\r\n";
@@ -222,7 +224,6 @@ void py_logger::log(const int logger_type, const int log_level, const std::strin
 		{
 			std::cout << "Logging.arc_welder_log - null was returned from the specified logger.\r\n";
 			PyErr_SetString(PyExc_ValueError, "Logging.arc_welder_log - null was returned from the specified logger.");
-			return;
 		}
 		else
 		{
@@ -234,7 +235,6 @@ void py_logger::log(const int logger_type, const int log_level, const std::strin
 			// return an error.
 			PyErr_Print();
 			PyErr_Clear();
-			return;
 		}
 	}
 	else

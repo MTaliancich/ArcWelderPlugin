@@ -3,7 +3,7 @@
 //
 // Tools for parsing gcode and calculating printer state from parsed gcode commands.
 //
-// Copyright(C) 2020 - Brad Hochgesang
+// Copyright(C) 2021 - Brad Hochgesang
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This program is free software : you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -102,5 +102,6 @@ struct position
 	void set_e_axis_mode(const std::string& e_axis_default_mode);
 	void set_units_default(const std::string& units_default);
 	bool can_take_snapshot();
+	bool is_travel();
 };
 #endif

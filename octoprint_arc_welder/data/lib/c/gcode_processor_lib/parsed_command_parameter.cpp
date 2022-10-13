@@ -3,7 +3,7 @@
 //
 // Tools for parsing gcode and calculating printer state from parsed gcode commands.
 //
-// Copyright(C) 2020 - Brad Hochgesang
+// Copyright(C) 2021 - Brad Hochgesang
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This program is free software : you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -26,19 +26,25 @@ parsed_command_parameter::parsed_command_parameter()
 {
 	value_type = 'N';
 	name.reserve(1);
+	name = "";
+	unsigned_long_value = 0;
+	double_value = 0;
+	double_precision = 0;
+	string_value;
+	string_value = "";
 }
 
-parsed_command_parameter::parsed_command_parameter(const std::string name, double value) : name(name), double_value(value)
+parsed_command_parameter::parsed_command_parameter(const std::string name, double value, unsigned char precision) : name(name), double_value(value), double_precision(precision)
 {
 	value_type = 'F';
 }
 
-parsed_command_parameter::parsed_command_parameter(const std::string name, const std::string value) : name(name), string_value(value)
+parsed_command_parameter::parsed_command_parameter(const std::string name, const std::string value) : name(name), string_value(value), double_precision(0)
 {
 	value_type = 'S';
 }
 
-parsed_command_parameter::parsed_command_parameter(const std::string name, const unsigned long value) : name(name), unsigned_long_value(value)
+parsed_command_parameter::parsed_command_parameter(const std::string name, const unsigned long value) : name(name), unsigned_long_value(value), double_precision(0)
 {
 	value_type = 'U';
 }

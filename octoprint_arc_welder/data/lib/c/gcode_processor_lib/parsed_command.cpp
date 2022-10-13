@@ -3,7 +3,7 @@
 //
 // Tools for parsing gcode and calculating printer state from parsed gcode commands.
 //
-// Copyright(C) 2020 - Brad Hochgesang
+// Copyright(C) 2021 - Brad Hochgesang
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This program is free software : you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -58,19 +58,6 @@ std::string parsed_command::rewrite_gcode_string()
 		{
 			parsed_command_parameter p = parameters[index];
 			
-			if (p.name == "E")
-			{
-				stream << std::fixed << std::setprecision(5);
-			}
-			else if (p.name == "F")
-			{
-				stream << std::fixed << std::setprecision(0);
-			}
-			else
-			{
-				stream << std::fixed << std::setprecision(3);
-			}
-			
 			stream << " " << p.name;
 			switch (p.value_type)
 			{
@@ -78,10 +65,10 @@ std::string parsed_command::rewrite_gcode_string()
 				stream << p.string_value;
 				break;
 			case 'F':
-				stream << p.double_value;
+				stream << p.double_value << std::fixed << std::setprecision(p.double_precision);
 				break;
 			case 'U':
-				stream << p.unsigned_long_value;
+				stream << std::setprecision(0) << p.unsigned_long_value;
 				break;
 			}
 		}

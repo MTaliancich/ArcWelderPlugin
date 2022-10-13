@@ -34,6 +34,7 @@ from octoprint.logging.handlers import (
     CleaningTimedRotatingFileHandler,
 )
 
+
 class Singleton(type):
     _instances = {}
 
@@ -41,6 +42,8 @@ class Singleton(type):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
+
+
 # custom log level - VERBOSE
 VERBOSE = 5
 DEBUG = logging.DEBUG
@@ -69,9 +72,7 @@ def format_log_time(time_seconds):
 
 
 class ArcWelderFormatter(logging.Formatter):
-    def __init__(
-        self, fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt=None
-    ):
+    def __init__(self, fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt=None):
         super(ArcWelderFormatter, self).__init__(fmt=fmt, datefmt=datefmt)
 
     def formatTime(self, record, datefmt=None):
@@ -117,7 +118,8 @@ class LoggingConfigurator(object):
         self._console_handler = None
         self.child_loggers = set()
 
-    def _get_root_logger(self, name):
+    @staticmethod
+    def _get_root_logger(name):
         """Get a logger instance that uses new-style string formatting"""
         log = logging.getLogger(name)
         log.setLevel(logging.NOTSET)

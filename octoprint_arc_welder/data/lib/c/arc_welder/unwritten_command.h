@@ -6,7 +6,7 @@
 //
 // Uses the 'Gcode Processor Library' for gcode parsing, position processing, logging, and other various functionality.
 //
-// Copyright(C) 2020 - Brad Hochgesang
+// Copyright(C) 2021 - Brad Hochgesang
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This program is free software : you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as published
@@ -29,39 +29,37 @@ struct unwritten_command
 {
 	unwritten_command() {
 		is_extruder_relative = false;
-		e_relative = 0;
-		offset_e = 0;
-		extrusion_length = 0;
+		length = 0;
+		is_g0_g1 = false;
+		is_g2_g3 = false;
+		is_travel = false;
+		is_extrusion = false;
+		is_retraction = false;
+		gcode = "";
+		comment = "";
 	}
-	unwritten_command(parsed_command &cmd, bool is_relative, double command_length) {
-		is_extruder_relative = is_relative;
-		command = cmd;
-		extrusion_length = command_length;
-	}
-	unwritten_command(position* p, double command_length) {
-	  
-		e_relative = p->get_current_extruder().e_relative;
-		offset_e = p->get_current_extruder().get_offset_e();
-		is_extruder_relative = p->is_extruder_relative;
-		command = p->command;
-		extrusion_length = command_length;
-	}
-	bool is_extruder_relative;
-	double e_relative;
-	double offset_e;
-	double extrusion_length;
-	parsed_command command;
-
-	std::string to_string(bool rewrite, std::string additional_comment)
+	unwritten_command(parsed_command &cmd, bool is_relative, bool is_extrusion, bool is_retraction, bool is_travel, double command_length) 
+		: is_extruder_relative(is_relative), is_extrusion(is_extrusion), is_retraction(is_retraction), is_travel(is_travel), is_g0_g1(cmd.command == "G0" || cmd.command == "G1"), is_g2_g3(cmd.command == "G2" || cmd.command == "G3"), gcode(cmd.gcode), comment(cmd.comment), length(command_length)
 	{
-		command.comment.append(additional_comment);
 
-		if (rewrite)
+	}
+	bool is_g0_g1;
+	bool is_g2_g3;
+	bool is_extruder_relative;
+	bool is_travel;
+	bool is_extrusion;
+	bool is_retraction;
+	double length;
+	std::string gcode;
+	std::string comment;
+
+	std::string to_string()
+	{
+		if (comment.size() > 0)
 		{
-			return command.rewrite_gcode_string();
+			return gcode + ";" + comment;
 		}
-
-		return command.to_string();
+		return gcode;
 	}
 };
 
