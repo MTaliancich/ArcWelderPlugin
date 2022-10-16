@@ -344,20 +344,20 @@ def get_config_from_root(root):
         parser.readfp(f)
     VCS = parser.get("versioneer", "VCS")  # mandatory
 
-    def get(parser, name):
-        if parser.has_option("versioneer", name):
-            return parser.get("versioneer", name)
+    def get(parser_, name):
+        if parser_.has_option("versioneer", name):
+            return parser_.get("versioneer", name)
         return None
     cfg = VersioneerConfig()
     cfg.VCS = VCS
-    cfg.style = get(parser, "style") or ""
-    cfg.versionfile_source = get(parser, "versionfile_source")
-    cfg.versionfile_build = get(parser, "versionfile_build")
-    cfg.tag_prefix = get(parser, "tag_prefix")
+    cfg.style = get(parser_=parser, name="style") or ""
+    cfg.versionfile_source = get(parser_=parser, name="versionfile_source")
+    cfg.versionfile_build = get(parser_=parser, name="versionfile_build")
+    cfg.tag_prefix = get(parser_=parser, name="tag_prefix")
     if cfg.tag_prefix in ("''", '""'):
         cfg.tag_prefix = ""
-    cfg.parentdir_prefix = get(parser, "parentdir_prefix")
-    cfg.verbose = get(parser, "verbose")
+    cfg.parentdir_prefix = get(parser_=parser, name="parentdir_prefix")
+    cfg.verbose = get(parser_=parser, name="verbose")
     return cfg
 
 
@@ -385,15 +385,16 @@ def run_command(commands, args, cwd=None, verbose=False, hide_stderr=False,
                 env=None):
     """Call the given command(s)."""
     assert isinstance(commands, list)
-    p = None
+    dispcmd = None
     for c in commands:
         try:
             dispcmd = str([c] + args)
             # remember shell=False, so use git.cmd on windows, not just git
-            p = subprocess.Popen([c] + args, cwd=cwd, env=env,
-                                 stdout=subprocess.PIPE,
-                                 stderr=(subprocess.PIPE if hide_stderr
-                                         else None))
+            p1 = subprocess.Popen(
+                [c] + args, cwd=cwd, env=env,
+                stdout=subprocess.PIPE,
+                stderr=(subprocess.PIPE if hide_stderr
+                        else None))
             break
         except EnvironmentError:
             e = sys.exc_info()[1]
@@ -407,15 +408,15 @@ def run_command(commands, args, cwd=None, verbose=False, hide_stderr=False,
         if verbose:
             print("unable to find command, tried %s" % (commands,))
         return None, None
-    stdout = p.communicate()[0].strip()
+    stdout = p1.communicate()[0].strip()
     if sys.version_info[0] >= 3:
         stdout = stdout.decode()
-    if p.returncode != 0:
+    if p1.returncode != 0:
         if verbose:
             print("unable to run %s (error)" % dispcmd)
             print("stdout was %s" % stdout)
-        return None, p.returncode
-    return stdout, p.returncode
+        return None, p1.returncode
+    return stdout, p1.returncode
 
 
 LONG_VERSION_PY['git'] = '''
@@ -978,7 +979,7 @@ def git_versions_from_keywords(keywords, tag_prefix, verbose):
     date = keywords.get("date")
     if date is not None:
         # git-2.2.0 added "%cI", which expands to an ISO-8601 -compliant
-        # datestamp. However we prefer "%ci" (which expands to an "ISO-8601
+        # datestamp. However, we prefer "%ci" (which expands to an "ISO-8601
         # -like" string, which we must then edit to make compliant), because
         # it's been around since git-1.5.3, and it's too difficult to
         # discover which version we're using, or to work around using an

@@ -26,7 +26,6 @@
 ##################################################################################
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
-#from distutils.command.build_ext import build_ext
 from distutils.ccompiler import CCompiler
 from distutils.unixccompiler import UnixCCompiler
 from distutils.msvccompiler import MSVCCompiler
@@ -44,12 +43,12 @@ import versioneer
 plugin_identifier = "arc_welder"
 # The plugin's python package, should be "octoprint_<plugin identifier>", has to be unique
 plugin_package = "octoprint_arc_welder"
-# The plugin's human readable name. Can be overwritten within OctoPrint's internal data via __plugin_name__ in the
+# The plugin's human-readable name. Can be overwritten within OctoPrint's internal data via __plugin_name__ in the
 # plugin module
 plugin_name = "Arc Welder"
 # The plugin's fallback version, in case versioneer can't extract the version from _version.py.
 # This can happen if the user installs from one of the .zip links in github, not generated with git archive
-fallback_version = "1.0.0"
+fallback_version = "1.2.0"
 plugin_version = versioneer.get_version()
 if plugin_version == "0+unknown" or NumberedVersion(plugin_version) < NumberedVersion(
     fallback_version
@@ -59,8 +58,8 @@ if plugin_version == "0+unknown" or NumberedVersion(plugin_version) < NumberedVe
         # This generates version in the following form:
         #   0.1.0rc1+?.GUID_GOES_HERE
         plugin_version += "+u." + versioneer.get_versions()["full-revisionid"][0:7]
-    except:
-        pass
+    except Exception as e:
+        print(e)
     print("Unknown Version, falling back to " + plugin_version + ".")
 
 plugin_cmdclass = versioneer.get_cmdclass()
@@ -79,7 +78,15 @@ plugin_url = "https://github.com/FormerLurker/ArcWelderPlugin"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ["six", "OctoPrint>1.3.8", "setuptools>=6.0"]
+plugin_requires = [
+    "OctoPrint>=1.8.0",
+    "setuptools>=49.2.1",
+    "DateTime>=4.7",
+    "six>=1.15.0",
+    "tornado>=6.2",
+    "Flask>=2.2.2",
+    "requests>=2.28.1"
+]
 
 import octoprint.server
 
@@ -176,7 +183,8 @@ os_compiler_opts = {
     }
 }
 
-class build_ext_subclass(build_ext):
+
+class buildExtSubclass(build_ext):
     def build_extensions(self):
         print("Compiling PyGcodeArcConverter Extension with {0}.".format(self.compiler))
         # get rid of -Wstrict-prototypes option, it just generates pointless warnings
@@ -187,7 +195,7 @@ class build_ext_subclass(build_ext):
             print(
                 "Unable to remove -Wstrict-prototypes or to add -Wno-unknown-pragmas."
             )
-            pass
+
         c = self.compiler
         opts = [v for k, v in compiler_opts.items() if c.compiler_type == k]
 
@@ -199,10 +207,10 @@ class build_ext_subclass(build_ext):
                 o["extra_link_args"].extend(os_flags["extra_compile_args"])
                 o["define_macros"].extend(os_flags["define_macros"])
 
-        for e in self.extensions:
+        for e2 in self.extensions:
             for o in opts:
                 for attrib, value in o.items():
-                    getattr(e, attrib).extend(value)
+                    getattr(e2, attrib).extend(value)
 
         for extension in self.extensions:
             print(
@@ -216,9 +224,8 @@ class build_ext_subclass(build_ext):
         build_ext.build_extensions(self)
 
 
-## Build our c++ parser extension
+# Build our c++ parser extension
 plugin_ext_sources = [
-
     "octoprint_arc_welder/data/lib/c/gcode_processor_lib/array_list.cpp",
     "octoprint_arc_welder/data/lib/c/gcode_processor_lib/circular_buffer.cpp",
     "octoprint_arc_welder/data/lib/c/gcode_processor_lib/extruder.cpp",
@@ -252,7 +259,7 @@ cpp_gcode_parser = Extension(
 
 additional_setup_parameters = {
     "ext_modules": [cpp_gcode_parser],
-    "cmdclass": {"build_ext": build_ext_subclass},
+    "cmdclass": {"build_ext": buildExtSubclass},
 }
 
 ########################################################################################################################
@@ -260,7 +267,8 @@ additional_setup_parameters = {
 
 try:
     import octoprint_setuptools
-except:
+except Exception as e:
+    print(e)
     print(
         "Could not import OctoPrint's setuptools, are you sure you are running that under "
         "the same python installation that OctoPrint is installed under?"
