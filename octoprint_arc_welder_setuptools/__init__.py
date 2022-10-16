@@ -36,9 +36,9 @@ class NumberedVersion(version.LooseVersion):
         exists.
     """
 
-    def __init__(self, vstring=None, pre_release_tags=["rc"], development_tags=["dev"]):
+    def __init__(self, vstring: str = None, pre_release_tags=["rc"], development_tags=["dev"]):
         # trim vstring
-        if vstring != None:
+        if vstring is not None:
             vstring = vstring.strip()
         self.pre_release_tags = pre_release_tags
         self.development_tags = development_tags
@@ -64,7 +64,7 @@ class NumberedVersion(version.LooseVersion):
             index = vstring.find("+")
             # make sure there is info after the '+'
             if index < len(vstring) - 1:
-                self.commit_version_string = vstring[index + 1 :]
+                self.commit_version_string = vstring[index + 1:]
             # strip off the plus symbox from the vstring
             vstring = vstring[:index]
         version.LooseVersion.__init__(self, vstring)
@@ -94,7 +94,7 @@ class NumberedVersion(version.LooseVersion):
         # determine development version
         for i in range(index + 1, tag_length):
             index = i
-            seg = self.version[i]
+            seg = self.version[index]
             self._development_version.append(seg)
 
         if len(self.commit_version_string) > 0:
@@ -138,10 +138,7 @@ class NumberedVersion(version.LooseVersion):
 
     def __repr__(self):
         return "{cls} ('{vstring}', {prerel_tags})".format(
-            cls=self.__class__.__name__,
-            vstring=str(self),
-            prerel_tags=list(self.prerel_tags.keys()),
-        )
+            cls=self.__class__.__name__, vstring=str(self), prerel_tags=list(dict(self.pre_release_tags).keys()), )
 
     def __str__(self):
         return self.original_string
@@ -268,5 +265,5 @@ class NumberedVersion(version.LooseVersion):
         return False
 
 
-def custom_version_compare(a,b):
+def custom_version_compare(a, b):
     return NumberedVersion(a) >= NumberedVersion(b)
