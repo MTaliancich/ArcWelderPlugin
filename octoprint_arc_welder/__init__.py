@@ -1004,9 +1004,12 @@ class ArcWelderPlugin(
     def upload_file(self, gcode_file_name):
         import ftplib
         try:
-            session = ftplib.FTP(self._ftp_host(), self._ftp_user(), self._ftp_password())
+            self._logger.debug("\nupload_file()")
+            self._logger.debug("host: %s, port: %s, password: %s" % (self._ftp_host, self._ftp_user, self._ftp_password))
+            session = ftplib.FTP(self._ftp_host, self._ftp_user, self._ftp_password)
+            self._logger.debug(self.get_plugin_data_folder())
             picture_file_name = gcode_file_name.replace('gcode', 'png')
-            data_folder = os.path.join(os.getcwd(), self._data_folder, "..")
+            data_folder = os.path.join(os.getcwd(), self.get_plugin_data_folder(), "..")
             gcode_folder = os.path.join(data_folder, '..', 'uploads')
             picture_folder = os.path.join(data_folder, 'UltimakerFormatPackage')
             gcode_file_path = os.path.join(gcode_folder, gcode_file_name)
@@ -1014,15 +1017,16 @@ class ArcWelderPlugin(
 
             gcode_file = open(gcode_file_path, 'rb')  # file to send
             picture_file = open(picture_file_path, 'rb')
-            session.storbinary("STOR /www/%s/%s" % (self._ftp_gcodePath(), gcode_file_name), gcode_file)  # send the file
-            session.storbinary("STOR /www/%s/%s" % (self._ftp_picturePath(), picture_file_name), picture_file)  # send the file
+            session.storbinary("STOR /www/%s/%s" % (self._ftp_gcodePath, gcode_file_name), gcode_file)  # send the file
+            session.storbinary("STOR /www/%s/%s" % (self._ftp_picturePath, picture_file_name), picture_file)  # send the file
             self._logger.info("uploaded: %s, %s" % (gcode_file_name, picture_file_name))
             gcode_file.close()  # close file and FTP
             picture_file.close()
             session.quit()
+            self._logger.info("send wh: %s, %s" % (gcode_file_name, picture_file_name))
             self.sendwhdiscord(gcode_file_name, picture_file_name)
         except Exception as e:
-            self._logger.info("error %s" % e)
+            self._logger.error("error %s" % e)
 
     def get_output_file_name_and_path(self, display_name, storage_path, gcode_comment_settings):
 
@@ -1353,12 +1357,12 @@ class ArcWelderPlugin(
 
     def sendwhdiscord(self, gcode_file_name, picture_file_name):
         import requests
-        gcode_files_folder = self._discord_gcodePath()
-        picture_files_folder = self._discord_picturePath()
-        bot3dprinter_png = self._discord_botAvatar()  # "bot3dprinter.png"
-        thumbnail_png = self._discord_whThumbnails()  # "s3dp_filigrane2.png"
-        nick = self._discord_botName()                # "Octoprint"
-        discord_wh_url = self._discord_whUrl()
+        gcode_files_folder = self._discord_gcodePath
+        picture_files_folder = self._discord_picturePath
+        bot3dprinter_png = self._discord_botAvatar  # "bot3dprinter.png"
+        thumbnail_png = self._discord_whThumbnails  # "s3dp_filigrane2.png"
+        nick = self._discord_botName                # "Octoprint"
+        discord_wh_url = self._discord_whUrl
         embeds = []
         embed = {
             "title": "3D Printer files monitor\n",
@@ -1425,7 +1429,7 @@ class ArcWelderPlugin(
         if (
             delete_after_processing
             and self._file_manager.file_exists(FileDestinations.LOCAL, octoprint_args["source_path"])
-            and not octoprint_args["source_path"] == octoprint_args["target_path"]
+            and octoprint_args["source_path"] != octoprint_args["target_path"]
         ):
             if not self._get_is_printing(octoprint_args["source_path"]):
                 # if the file is selected, deselect it.
@@ -1473,6 +1477,8 @@ class ArcWelderPlugin(
                 pass
 
         # if sendwebhook_after_processing: # TODOgcode_file_name = octoprint_args["target_path"].split('/')[-1]
+        self._logger.debug("upload_file start")
+        self._logger.debug("upload_file %", octoprint_args["target_path"].split('/')[-1])
         self.upload_file(octoprint_args["target_path"].split('/')[-1])
 
     def preprocessing_completed(self, task):
@@ -1863,7 +1869,6 @@ class ArcWelderPlugin(
                     # this may be too broad, but I don't want any errors here!
                     self._logger.exception(e)
                     self._logger.exception("Unable to remove the currently processing file from the analysis queue.")
-                    pass
 
         if self._show_queued_notification:
             message = "Successfully queued {0} for processing.".format(task["octoprint_args"]["source_name"])
