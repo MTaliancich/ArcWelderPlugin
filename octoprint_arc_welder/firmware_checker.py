@@ -52,7 +52,6 @@ root_logger = logging_configurator.get_root_logger()
 logger = logging_configurator.get_logger(__name__)
 
 
-
 class FirmwareChecker:
 
     DEFAULT_TIMEOUT_MS = 600000  # 1 minute
@@ -127,11 +126,12 @@ class FirmwareChecker:
                     with open(self._firmware_types_path) as f:
                         types_library = json.load(f)
                 except (IOError, OSError) as e:
+                    logger.error(e)
                     logger.info("The firmware types file does not exist.  Creating from defaults.")
                 except ValueError as e:
                     logger.error("Could not parse the firmware types file.  Recreating from the defaults.")
 
-            # load the defaults library (we need to make sure it's not newer than the version we have)
+            # load the defaults' library (we need to make sure it's not newer than the version we have)
 
             # The firmware types file either does not exist, or it is corrupt.  Recreate from the defaults
             if not os.path.exists(os.path.dirname(self._firmware_types_path)):
@@ -157,9 +157,9 @@ class FirmwareChecker:
                     firmware_type = self._firmware_types["types"][firmware_key]
                     functions = firmware_type.get("functions", {})
                     for function_key in functions:
-                        function = functions[function_key]
-                        if isinstance(function, dict):
-                            function["regex"] = re.compile(function.get("regex", ""))
+                        function_ = functions[function_key]
+                        if isinstance(function_, dict):
+                            function_["regex"] = re.compile(function_.get("regex", ""))
 
     def _save_firmware_types(self):
         def encode_firmware_types(obj):
@@ -182,6 +182,7 @@ class FirmwareChecker:
                 with self._shared_data_rlock:
                     self._current_firmware_info = json.load(f)
         except ValueError as e:
+            logger.error(e)
             logger.error("Error loading the current firmware info from '%s'.  Could not parse JSON.", self._current_firmware_path)
 
     def _save_current_firmware_info(self, firmware_info):
@@ -194,8 +195,10 @@ class FirmwareChecker:
                 json.dump(firmware_info, f)
                 logger.info("Current firmware info saved to: %s", self._current_firmware_path)
         except (IOError, OSError) as e:
+            logger.error(e)
             logger.exception("Error saving current firmware info to: %s", self._current_firmware_path)
         except ValueError as e:
+            logger.error(e)
             logger.exception("Error saving current firmware to '%s': Could not convert to JSON.", self._current_firmware_path)
 
     def check_for_updates(self):
@@ -227,7 +230,8 @@ class FirmwareChecker:
                     result["error"] = update_result["error"]
             except FirmwareFileUpdaterError as e:
                 result["error"] = e.message
-            except Exception as E:
+            except Exception as ex:
+                logger.error(ex)
                 logger.exception("an unknown exception occurred while checking for firmware info updates.")
                 result["error"] = "An unexpected exception occurred while checking for firmware updates.  See plugin.arcwelder.log for details."
 
@@ -332,28 +336,28 @@ class FirmwareChecker:
                 break
 
         if not firmware_type:
-            error = "Arc Welder does not recognize this firmware."
+            logger.error("Arc Welder does not recognize this firmware.")
             return result
 
         # Get the help file for this firmware type
-        result["type_help_file"] = firmware["help_file"]
+        result["type_help_file"] = firmware_type["help_file"]
 
         # get the check firmware function, which will call any get_firmware function
 
-        firmware_version = self._get_firmware_version_match(result, firmware)
+        firmware_version = self._get_firmware_version_match(result, firmware_type)
         if firmware_version:
             result["version"] = firmware_version
 
         # call any custom arcs_enabled function
         if result.get("arcs_enabled", None) is None:
-            arcs_enabled = self._get_arcs_enabled_match(result, firmware)
+            arcs_enabled = self._get_arcs_enabled_match(result, firmware_type)
             result["arcs_enabled"] = arcs_enabled
             if arcs_enabled:
                 result["g2_g3_supported"] = True
 
         # call any custom get date function
         if result.get("build_date") is None:
-            build_date = self._get_build_date_match(result, firmware)
+            build_date = self._get_build_date_match(result, firmware_type)
             if build_date:
                 result["build_date"] = build_date
 
@@ -419,6 +423,9 @@ class FirmwareChecker:
             return False
         parsed_response = firmware_check_result.get("m115_parsed_response", None)
         is_regex = False
+        regex = None
+        regex_key = None
+        is_firmware_type = None
         if isinstance(is_firmware_type_info, dict):
             is_regex = True
             regex = is_firmware_type_info.get("regex", None)
@@ -436,8 +443,7 @@ class FirmwareChecker:
         if not is_regex and parsed_response and is_firmware_type(parsed_response):
             return True
         elif is_regex and regex and FirmwareChecker.get_regex_check(
-                firmware_check_result, regex, regex_key
-        ):
+                firmware_check_result, regex, regex_key):
             return True
         return False
 
@@ -447,7 +453,8 @@ class FirmwareChecker:
         is_regex = False
         if not get_version_info:
             return False
-
+        get_version = None
+        regex = None
         if isinstance(get_version_info, dict):
             is_regex = True
             regex = get_version_info.get("regex", None)
@@ -490,8 +497,10 @@ class FirmwareChecker:
         get_arcs_not_enabled_info = firmware_type.get("functions", {}).get("arcs_not_enabled", None)
         parsed_response = firmware_check_result.get("m115_parsed_response", None)
         is_regex = False
+        regex = None
         arcs_enabled = None
         arcs_not_enabled = None
+        get_arcs_enabled = None
         # Check Arcs Enabled
         if get_arcs_enabled_info:
             if isinstance(get_arcs_enabled_info, dict):
@@ -509,7 +518,7 @@ class FirmwareChecker:
 
             if arcs_enabled:
                 return True
-
+        get_arcs_not_enabled = None
         # check arcs not enabled
         if get_arcs_not_enabled_info:
             if isinstance(get_arcs_not_enabled_info, dict):
@@ -535,7 +544,8 @@ class FirmwareChecker:
         parsed_response = firmware_check_result.get("m115_parsed_response", None)
         is_regex = False
         build_date = None
-        arcs_not_enabled = None
+        get_build_date = None
+        regex = None
         # Check Arcs Enabled
         if get_guild_date_info:
             if isinstance(get_guild_date_info, dict):
@@ -572,7 +582,7 @@ class FirmwareChecker:
                 current_version_string = clean_version(current_version_string)
             current_value = parse_version(current_version_string)
 
-        return utilities.is_version_in_versions(current_version_string, version_checks, compare_type)
+        return utilities.is_version_in_versions(current_value, version_checks, compare_type)
 
     @staticmethod
     def parse_datetime(datetime_string):
@@ -632,6 +642,7 @@ class FirmwareChecker:
         return firmware_name.startswith("Prusa-Firmware") and not firmware_name.startswith("Prusa-Firmware-Buddy")
 
     REGEX_PRUSA_VERSION = re.compile(r"^Prusa-Firmware\s([^\s]+)")
+
     @staticmethod
     def get_version_prusa(parsed_firmware_response):
         if "FIRMWARE_VERSION" in parsed_firmware_response:
@@ -771,13 +782,14 @@ class FirmwareChecker:
     MARLIN_EXTENDED_CAPABILITIES_KEY = "EXTENDED_CAPABILITIES_REPORT"
     # regex copied from octoprint source at util.comm
     REGEX_FIRMWARE_RESPONSE_SPLITTER = re.compile(r"\s*([A-Z0-9_]+):\s*")
+
     @staticmethod
     def parse_m115_response(response_lines):
         # Separate the first element from the rest, it is often special
         response_text = response_lines[0]
         capabilities_text = None
         if len(response_lines) > 1:
-            # combine all of the remaining elements into a single string
+            # combine all the remaining elements into a single string
             capabilities_text = "\n".join(response_lines[1:])
 
         if response_text.startswith("NAME."):
@@ -923,7 +935,6 @@ class FirmwareChecker:
 
         result = self._get_printer_response(request)
 
-        arcs_enabled = None
         if result.response is not None:
             firmware_info["arcs_enabled"] = FirmwareChecker._g2_g3_response_enabled(result.response[0], firmware_info)
 
@@ -957,7 +968,6 @@ class FirmwareChecker:
             return True, "ok"
         return False, response_text
 
-
     @staticmethod
     def _check_for_ok_response(response_text):
         return response_text.strip().upper().startswith("OK")
@@ -982,7 +992,7 @@ class FirmwareChecker:
         return self._printer_request.wait_for_gcode_sent() and not self._printer_request.gcode_sent
     
     def _get_printer_response(self, request, timeout_ms=None):
-        '''Sends a request, gets a response.'''
+        """Sends a request, gets a response."""
         # acquire the request lock in case we run this with threads in the future
         with self._send_request_lock:
             if timeout_ms is None:
@@ -1053,7 +1063,7 @@ class FirmwareChecker:
         with self._request_lock as r:
             if self._get_is_request_open():
                 logger.verbose(
-                    "on_gcode_sent: Gcode Sent: %s", cmd
+                    "on_gcode_sent: Gcode Sent : %s", cmd
                 )
                 if self._get_request_waiting_for_send():
                     logger.verbose("on_gcode_sent:  Gcode sending for request: %s, gcode: %s", self._printer_request.name, cmd)
@@ -1071,7 +1081,7 @@ class FirmwareChecker:
 
     # noinspection PyUnusedLocal
     def on_gcode_received(self, comm, line, *args, **kwargs):
-        '''Must be called when gcodes are about to be sent by the owner.'''
+        """"Must be called when gcodes are about to be sent by the owner."""
         # ensure that each hook must wait for the other to complete
         with self._request_lock as r:
             # see if there is a pending request.  Do this without a lock for speed. I think this is OK
@@ -1084,10 +1094,10 @@ class FirmwareChecker:
                 # test the printer's response, throw no exceptions
                 try:
                     success = False
-                        # recheck to ensure printer request is not none now that we've acquired the lock
+                    # recheck to ensure printer request is not none now that we've acquired the lock
                     if self._printer_request is not None:
                         if not self._get_request_waiting_for_send():
-                            if self._printer_request.response_started == False:
+                            if not self._printer_request.response_started:
                                 logger.verbose("on_gcode_received: checking response '%s'.", clean_line)
                                 # ensure atomic writes here
                                 success, new_line = self._printer_request.check_response(clean_line)
@@ -1131,6 +1141,7 @@ class FirmwareChecker:
                             logger.verbose("on_gcode_received: Triggering event.")
                             self._request_signal.set()
                 except Exception as e:
+                    logger.error(e)
                     logger.exception("on_gcode_received: An error occurred while checking the printer response.")
         # ALWAYS return the line UNLESS this is a naked G2/G3, in which case we want to return OK.
 
@@ -1140,8 +1151,9 @@ class FirmwareChecker:
 class PrinterRequest:
     def __init__(
             self, name, commands, check_response_function, check_sent_function=None, wait_for_ok=False,
-            append_final_response=False, tags=set()
-    ):
+            append_final_response=False, tags=None):
+        if tags is None:
+            tags = set()
         self.name = name
         self.commands = commands
         self.check_sent_function = check_sent_function

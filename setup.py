@@ -106,7 +106,12 @@ if (3, 0) < sys.version_info < (3, 3):
 # already be installed automatically if they exist. Note that if you add something here you'll also need to update
 # MANIFEST.in to match to ensure that python setup.py sdist produces a source distribution that contains all your
 # files. This is sadly due to how python's setup.py works, see also http://stackoverflow.com/a/14159430/2028598
-plugin_additional_data = ["data/*.json", "data/lib/c/*.cpp", "data/lib/c/*.h"]
+plugin_additional_data = [
+    "data/*.json",
+    "data/firmware/*.json",
+    "data/lib/c/*.cpp",
+    "data/lib/c/*.h"
+]
 # Any additional python packages you need to install with your plugin that are not contained in <plugin_package>.*
 plugin_additional_packages = ["octoprint_arc_welder_setuptools"]
 
@@ -121,27 +126,27 @@ compiler_opts = {
     CCompiler.compiler_type: {
         "extra_compile_args": ["-O3", "-std=c++11"],
         "extra_link_args": [],
-        "define_macros": [],
+        "define_macros": [("IS_ARCWELDER_PLUGIN","1")],
     },
     MSVCCompiler.compiler_type: {
         "extra_compile_args": ["/O2", "/GL", "/Gy", "/MD", "/EHsc"],
         "extra_link_args": [],
-        "define_macros": [],
+        "define_macros": [("IS_ARCWELDER_PLUGIN","1")],
     },
     UnixCCompiler.compiler_type: {
         "extra_compile_args": ["-O3", "-std=c++11", "-Wno-unknown-pragmas", '-v'],
         "extra_link_args": [],
-        "define_macros": [],
+        "define_macros": [("IS_ARCWELDER_PLUGIN","1")],
     },
     BCPPCompiler.compiler_type: {
         "extra_compile_args": ["-O3", "-std=c++11"],
         "extra_link_args": [],
-        "define_macros": [],
+        "define_macros": [("IS_ARCWELDER_PLUGIN","1")],
     },
     CygwinCCompiler.compiler_type: {
         "extra_compile_args": ["-O3", "-std=c++11"],
         "extra_link_args": [],
-        "define_macros": [],
+        "define_macros": [("IS_ARCWELDER_PLUGIN","1")],
     },
 }
 
@@ -150,27 +155,27 @@ if DEBUG:
         CCompiler.compiler_type: {
             "extra_compile_args": [],
             "extra_link_args": [],
-            "define_macros": [("DEBUG_chardet", "1")],
+            "define_macros": [("IS_ARCWELDER_PLUGIN","1"),("DEBUG_chardet", "1")],
         },
         MSVCCompiler.compiler_type: {
             "extra_compile_args": ["/EHsc", "/Z7"],
             "extra_link_args": ["/DEBUG"],
-            "define_macros": [],
+            "define_macros": [("IS_ARCWELDER_PLUGIN","1")],
         },
         UnixCCompiler.compiler_type: {
             "extra_compile_args": ["-g"],
             "extra_link_args": ["-g"],
-            "define_macros": [],
+            "define_macros": [("IS_ARCWELDER_PLUGIN","1")],
         },
         BCPPCompiler.compiler_type: {
             "extra_compile_args": [],
             "extra_link_args": [],
-            "define_macros": [],
+            "define_macros": [("IS_ARCWELDER_PLUGIN","1")],
         },
         CygwinCCompiler.compiler_type: {
             "extra_compile_args": [],
             "extra_link_args": [],
-            "define_macros": [],
+            "define_macros": [("IS_ARCWELDER_PLUGIN","1")],
         },
     }
 
@@ -214,10 +219,11 @@ class buildExtSubclass(build_ext):
 
         for extension in self.extensions:
             print(
-                "Building Extensions for {0} - extra_compile_args:{1} - extra_link_args:{2}".format(
+                "Building Extensions for {0} - extra_compile_args:{1} - extra_link_args:{2} - define_macros:{3}".format(
                     extension.name,
                     extension.extra_compile_args,
                     extension.extra_link_args,
+                    extension.define_macros
                 )
             )
 
@@ -237,12 +243,14 @@ plugin_ext_sources = [
     "octoprint_arc_welder/data/lib/c/gcode_processor_lib/position.cpp",
     "octoprint_arc_welder/data/lib/c/gcode_processor_lib/utilities.cpp",
     "octoprint_arc_welder/data/lib/c/gcode_processor_lib/logger.cpp",
+    "octoprint_arc_welder/data/lib/c/gcode_processor_lib/fpconv.cpp",
     "octoprint_arc_welder/data/lib/c/arc_welder/arc_welder.cpp",
     "octoprint_arc_welder/data/lib/c/arc_welder/segmented_arc.cpp",
     "octoprint_arc_welder/data/lib/c/arc_welder/segmented_shape.cpp",
     "octoprint_arc_welder/data/lib/c/py_arc_welder/py_logger.cpp",
     "octoprint_arc_welder/data/lib/c/py_arc_welder/py_arc_welder.cpp",
     "octoprint_arc_welder/data/lib/c/py_arc_welder/py_arc_welder_extension.cpp",
+    "octoprint_arc_welder/data/lib/c/py_arc_welder/py_arc_welder_version.cpp",
     "octoprint_arc_welder/data/lib/c/py_arc_welder/python_helpers.cpp",
 ]
 cpp_gcode_parser = Extension(

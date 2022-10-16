@@ -1004,9 +1004,10 @@ class ArcWelderPlugin(
     def upload_file(self, gcode_file_name):
         import ftplib
         try:
-            self._logger.debug("\nupload_file()")
-            self._logger.debug("host: %s, port: %s, password: %s" % (self._ftp_host, self._ftp_user, self._ftp_password))
+            self._logger.debug("\n\nupload_file()")
+            self._logger.debug("upload_file host: %s, port: %s, password: %s" % (self._ftp_host, self._ftp_user, self._ftp_password))
             session = ftplib.FTP(self._ftp_host, self._ftp_user, self._ftp_password)
+            self._logger.debug("upload_file plugin_data_folder:")
             self._logger.debug(self.get_plugin_data_folder())
             picture_file_name = gcode_file_name.replace('gcode', 'png')
             data_folder = os.path.join(os.getcwd(), self.get_plugin_data_folder(), "..")
@@ -1019,14 +1020,14 @@ class ArcWelderPlugin(
             picture_file = open(picture_file_path, 'rb')
             session.storbinary("STOR /www/%s/%s" % (self._ftp_gcodePath, gcode_file_name), gcode_file)  # send the file
             session.storbinary("STOR /www/%s/%s" % (self._ftp_picturePath, picture_file_name), picture_file)  # send the file
-            self._logger.info("uploaded: %s, %s" % (gcode_file_name, picture_file_name))
+            self._logger.info("upload_file uploaded: %s, %s" % (gcode_file_name, picture_file_name))
             gcode_file.close()  # close file and FTP
             picture_file.close()
             session.quit()
-            self._logger.info("send wh: %s, %s" % (gcode_file_name, picture_file_name))
+            self._logger.info("upload_file send wh: %s, %s" % (gcode_file_name, picture_file_name))
             self.sendwhdiscord(gcode_file_name, picture_file_name)
         except Exception as e:
-            self._logger.error("error %s" % e)
+            self._logger.error("upload_file error %s" % e)
 
     def get_output_file_name_and_path(self, display_name, storage_path, gcode_comment_settings):
 
@@ -1383,18 +1384,21 @@ class ArcWelderPlugin(
             "username": nick,
             "embeds": embeds
         }
-        self._logger.exception(data)
+        self._logger.debug("sendwhdiscord data:")
+        self._logger.debug(data)
+        self._logger.debug("sendwhdiscord url: %s" % discord_wh_url)
         result = None
         try:
             result = requests.post(discord_wh_url, json=data)
             if 200 <= result.status_code < 300:
-                self._logger.exception("Webhook sent %s" % result.status_code)
+                self._logger.info("sendwhdiscord Webhook sent %s" % result.status_code)
             else:
-                self._logger.exception("WebhookNot sent with %s, response:\n%s" % (result.status_code, str(result.content)))
+                self._logger.exception("sendwhdiscord WebhookNot sent with %s, response: %s" % (result.status_code, str(result.content)))
         except Exception as e:
-            self._logger.exception(e)
+            self._logger.error("sendwhdiscord erreur:")
+            self._logger.error(e)
             if result:
-                self._logger.exception("WebhookNot sent with %s" % result.status_code)
+                self._logger.exception("sendwhdiscord Result %s" % result.status_code)
 
     def preprocessing_success(self, task, results):
         # extract the task data

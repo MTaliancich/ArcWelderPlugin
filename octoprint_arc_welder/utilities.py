@@ -129,8 +129,8 @@ def _search_gcode_file(gcode_file, search_function_list, lines_to_search=100):
     result = {}
     lines_read = 0
     num_functions = len(search_function_list)
-    while lines_read < lines_to_search:
 
+    while lines_read < lines_to_search:
         if num_functions == 0:
             # break if we have nothing to search for
             break
@@ -179,7 +179,7 @@ def _search_gcode_file(gcode_file, search_function_list, lines_to_search=100):
                     # we should stop and return this now
                     return {fn_def["name"]: fn_result}
                 # add the search function result to the result dict
-                if not fn_def["name"] in result:
+                if fn_def["name"] not in result:
                     result[fn_def["name"]] = fn_result
                 else:
                     result[fn_def["name"]].update(fn_result)
@@ -402,9 +402,8 @@ def is_version_in_versions(current_version_string, version_checks, compare_type=
         elif logical_operator == "<":
             if current_value < compare_value:
                 continue
-        elif logical_operator == "=":
-            if current_value == compare_value:
-                continue
+        elif logical_operator == "=" and current_value == compare_value:
+            continue
         # either there is an unknown logical operator, or the compare failed
         return False
     # all checks have passed, this is the right version

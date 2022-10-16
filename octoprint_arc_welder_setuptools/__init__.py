@@ -138,7 +138,10 @@ class NumberedVersion(version.LooseVersion):
 
     def __repr__(self):
         return "{cls} ('{vstring}', {prerel_tags})".format(
-            cls=self.__class__.__name__, vstring=str(self), prerel_tags=list(dict(self.pre_release_tags).keys()), )
+            cls=self.__class__.__name__,
+            vstring=str(self),
+            prerel_tags=list(dict(self.pre_release_tags).keys()),
+        )
 
     def __str__(self):
         return self.original_string

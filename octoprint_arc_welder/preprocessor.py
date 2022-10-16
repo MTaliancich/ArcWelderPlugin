@@ -98,7 +98,7 @@ class PreProcessorWorker(threading.Thread):
                 task = self._incoming_task_queue.get(False)
                 logger.info("Preprocessing of %s has been cancelled.", task["processor_args"]["source_path"])
             # cancel all tasks in the dequeue
-            while not len(self._task_deque) == 0:
+            while len(self._task_deque) != 0:
                 task = self._task_deque.pop()
                 logger.info("Preprocessing of %s has been cancelled.", task["processor_args"]["source_path"])
 
@@ -233,7 +233,6 @@ class PreProcessorWorker(threading.Thread):
                         continue
                     self._current_task = task
 
-                # success = False
                 try:
                     self._process(task)
                 except Exception as e:
@@ -358,12 +357,10 @@ class PreProcessorWorker(threading.Thread):
 
     def _check_for_cancelled_tasks(self):
         cancel_all, guids_to_cancel = self._get_cancellations_callback()
-        # cancelled_items = False
         if cancel_all:
             logger.info("Cancelling all processing tasks.")
             self.cancel_all()
         elif len(guids_to_cancel) > 0:
-            # cancelled_items = True
             for job_guid in guids_to_cancel:
                 removed_task = self.remove_task(job_guid)
                 if removed_task:
@@ -376,7 +373,6 @@ class PreProcessorWorker(threading.Thread):
     def _progress_received(self, progress):
         is_cancelled = False
         logger.verbose("Progress Received: %s", progress)
-        # current_task = None
         try:
             with self.r_lock:
                 self._check_for_cancelled_tasks()
@@ -399,4 +395,4 @@ class PreProcessorWorker(threading.Thread):
         finally:
             # allow other threads to process
             time.sleep(0.1)
-            return not is_cancelled
+        return not is_cancelled
