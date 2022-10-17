@@ -30,8 +30,10 @@ from __future__ import unicode_literals
 import logging
 import time
 import datetime
+import urllib
 from distutils.version import LooseVersion
 import copy
+
 from six import string_types
 from flask import request, jsonify
 import os
@@ -44,10 +46,17 @@ from octoprint.filemanager import FileDestinations
 from octoprint.filemanager.storage import StorageError
 from octoprint.server.util.flask import restricted_access
 from octoprint.events import Events
+
 import octoprint_arc_welder.log as log
 import octoprint_arc_welder.preprocessor as preprocessor
 import octoprint_arc_welder.utilities as utilities
 import octoprint_arc_welder.firmware_checker as firmware_checker
+
+MASTER = "master"
+
+RC_DEVEL = "rc/devel"
+
+RC_MAINTENANCE = "rc/maintenance"
 
 # stupid python 2/python 3 compatibility imports
 
@@ -402,7 +411,6 @@ class ArcWelderPlugin(
                     # Only print this error if firmware compensation is enabled
                     errors.append("If firmware compensation is enabled, Min Arc Segments must be greater than 0.")
                 settings[key] = self._settings.get([key])
-                # has_firmware_compensation_issue = True
 
             key = "default_xyz_precision"
             if key in settings and (int(settings[key]) < 3 or int(settings[key]) > 6):
@@ -1203,7 +1211,6 @@ class ArcWelderPlugin(
         extension = utilities.get_extension_from_filename(filename)
         filename_no_extension = utilities.remove_extension_from_filename(filename)
 
-        # display_extension = utilities.get_extension_from_filename(display_name)
         display_name_no_extension = utilities.remove_extension_from_filename(display_name)
 
         original_filename = filename_no_extension
@@ -1369,12 +1376,12 @@ class ArcWelderPlugin(
             "title": "3D Printer files monitor\n",
             "description": "A printable file have been uploaded: **%s**" % gcode_file_name,
             "type": "rich",
-            "url": "%s%s" % (gcode_files_folder, gcode_file_name),
+            "url": ("%s%s" % (gcode_files_folder, gcode_file_name)).replace(" ", "%20"),
             "thumbnail": {
                 "url": "%s" % thumbnail_png
             },
             "image": {
-                "url": "%s%s" % (picture_files_folder, picture_file_name)
+                "url": ("%s%s" % (picture_files_folder, picture_file_name)).replace(" ", "%20")
             }
         }
         embeds.append(embed)
@@ -1393,7 +1400,7 @@ class ArcWelderPlugin(
             if 200 <= result.status_code < 300:
                 self._logger.info("sendwhdiscord Webhook sent %s" % result.status_code)
             else:
-                self._logger.exception("sendwhdiscord WebhookNot sent with %s, response: %s" % (result.status_code, str(result.content)))
+                self._logger.exception("sendwhdiscord Webhook Not sent with %s, response: %s" % (result.status_code, str(result.content)))
         except Exception as e:
             self._logger.error("sendwhdiscord erreur:")
             self._logger.error(e)
@@ -1725,12 +1732,10 @@ class ArcWelderPlugin(
             if max_gcode_length < 0:
                 self._logger.warning("The max g2/g3 length setting is less than 0.  Setting to 0, which will disable max g2 g3 length detection.")
                 max_gcode_length = 0
-                # max_gcode_length_detection_enabled = False
             elif max_gcode_length < 31:
                 self._logger.warning(
                     "The max g2/g3 length setting is less than 31, but not 0.  Setting to 0, which will disable max g2 g3 length detection.")
                 max_gcode_length = 0
-                # max_gcode_length_detection_enabled = False
 
         # determine the target file name and path
         sendwebhook_after_processing = self._get_sendwebhook_after_processing()
@@ -1923,20 +1928,20 @@ class ArcWelderPlugin(
         displayName="Arc Welder: Anti-Stutter",
         # version check: github repository
         type="github_release",
-        user="FormerLurker",
+        user="ketchu13",
         repo="ArcWelderPlugin",
-        pip="https://github.com/FormerLurker/ArcWelderPlugin/archive/{target_version}.zip",
-        stable_branch=dict(branch="master", commitish=["master"], name="Stable"),
+        pip="https://github.com/ketchu13/ArcWelderPlugin/archive/{target_version}.zip",
+        stable_branch=dict(branch=MASTER, commitish=[MASTER], name="Stable"),
         release_compare='custom',
         prerelease_branches=[
             dict(
-                branch="rc/maintenance",
-                commitish=["master", "rc/maintenance"],  # maintenance RCs (include master)
+                branch=RC_MAINTENANCE,
+                commitish=[("%s" % MASTER), RC_MAINTENANCE],  # maintenance RCs (include master)
                 name="Maintenance RCs"
             ),
             dict(
-                branch="rc/devel",
-                commitish=["master", "rc/maintenance", "rc/devel"],  # devel & maintenance RCs (include master)
+                branch=RC_DEVEL,
+                commitish=[MASTER, RC_MAINTENANCE, RC_DEVEL],  # devel & maintenance RCs (include master)
                 name="Devel RCs"
             )
         ],
@@ -1957,12 +1962,12 @@ class ArcWelderPlugin(
                 prerelease_channel = self._settings.global_get(
                     ["plugins", "softwareupdate", "checks", "octoprint", "prerelease_channel"]
                 )
-                if prerelease_channel == "rc/maintenance":
+                if prerelease_channel == RC_MAINTENANCE:
                     is_prerelease = True
-                    prerelease_channel = "rc/maintenance"
-                elif prerelease_channel == "rc/devel":
+                    prerelease_channel = RC_MAINTENANCE
+                elif prerelease_channel == RC_DEVEL:
                     is_prerelease = True
-                    prerelease_channel = "rc/devel"
+                    prerelease_channel = RC_DEVEL
 
             ArcWelderPlugin.arc_welder_update_info["prerelease"] = is_prerelease
             if prerelease_channel is not None:
