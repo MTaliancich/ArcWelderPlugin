@@ -72,20 +72,20 @@ plugin_author = "Brad Hochgesang"
 plugin_author_email = "FormerLurker@pm.me"
 
 # The plugin's homepage URL. Can be overwritten within OctoPrint's internal data via __plugin_url__ in the plugin module
-plugin_url = "https://github.com/FormerLurker/ArcWelderPlugin"
+plugin_url = "https://github.com/MTaliancich/ArcWelderPlugin"
 
 # The plugin's license. Can be overwritten within OctoPrint's internal data via __plugin_license__ in the plugin module
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
 plugin_requires = [
-    "OctoPrint>=1.8.0",
-    "setuptools>=49.2.1",
-    "DateTime>=4.7",
-    "six>=1.15.0",
+    "OctoPrint>=1.10.0",
+    "setuptools>=69.5.1",
+    "DateTime>=5.5",
+    "six>=1.16.0",
     "tornado>=6.2",
-    "Flask>=2.2.2",
-    "requests>=2.28.1"
+    "Flask>=2.2.5",
+    "requests>=2.31.0"
 ]
 
 import octoprint.server

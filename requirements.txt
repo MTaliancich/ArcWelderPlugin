@@ -1,7 +1,7 @@
-OctoPrint>=1.8.4
-setuptools>=49.2.1
-DateTime>=4.7
-six>=1.15.0
+OctoPrint>=1.10.0
+setuptools>=69.5.1
+DateTime>=5.5
+six>=1.16.0
 tornado>=6.2
-Flask>=2.2.2
-requests>=2.28.1
+Flask>=2.2.5
+requests>=2.31.0
