@@ -26,6 +26,7 @@
 ##################################################################################
 
 import unittest
+
 from octoprint_arc_welder.test.test_firmware_checker import TestFirmwareChecker
 
 

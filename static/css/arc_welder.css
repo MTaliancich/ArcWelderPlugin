@@ -49,10 +49,10 @@
 }
 
 .arc-welder .progress {
-    margin-bottom:5px;
+    margin-bottom: 5px;
 }
 
-.arc-welder pre.statistics-text{
+.arc-welder pre.statistics-text {
     margin-top: 5px;
     margin-bottom: 5px;
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
@@ -64,17 +64,18 @@
 }
 
 div.ui-pnotify.arc-welder {
-    width:400px!important;
+    width: 400px !important;
 }
 
-.arc-welder .control-label{
+.arc-welder .control-label {
     padding-right: 10px;
 }
+
 .arc-welder button.full-width {
     width: 100%;
 }
-#tab_plugin_arc_welder .border
-{
+
+#tab_plugin_arc_welder .border {
     border: 1px solid transparent;
     border-color: inherit;
 }
@@ -85,11 +86,11 @@ div.ui-pnotify.arc-welder {
 }
 
 #tab_plugin_arc_welder_controls .no-underline:link {
- text-decoration:none;
+    text-decoration: none;
 }
 
 #tab_plugin_arc_welder_controls .no-click:link {
-  cursor: not-allowed;
+    cursor: not-allowed;
 }
 
 .arc-welder .fade-out {
@@ -151,12 +152,12 @@ div.ui-pnotify.arc-welder {
 .arc-welder .short-rows .span9,
 .arc-welder .short-rows .span10,
 .arc-welder .short-rows .span11,
-.arc-welder .short-rows .span12{
-    min-height:20px;
+.arc-welder .short-rows .span12 {
+    min-height: 20px;
 }
 
 .arc-welder .short-rows .control-group,
-.arc-welder .short-rows .progress ,
+.arc-welder .short-rows .progress,
 .arc-welder .short-rows fieldset legend {
     padding-bottom: 0px;
     margin-bottom: 5px;

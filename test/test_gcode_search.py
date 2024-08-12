@@ -24,9 +24,9 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
+import sys
 import unittest
 
-import sys
 import octoprint_arc_welder.utilities as utilities
 from octoprint_arc_welder import ArcWelderPlugin
 
@@ -34,6 +34,7 @@ if sys.version_info[0] < 3:
     from StringIO import StringIO
 else:
     from io import StringIO
+
 
 class TestGcodeSearch(unittest.TestCase):
     def __init__(self, *args, **kwargs):
@@ -98,23 +99,23 @@ class TestGcodeSearch(unittest.TestCase):
         )
 
         # test speed
-     #    test_string = """
-     #                ; Comment
-     #                ; Copyright(C) 2020 - Brad Hochgesang
-     #                ;  AcWelder   :POSTFIX= .aw, Prefix = \\\"arc\\,welded\\\", resolution-mm = 0.2
-     # afjdklsafjdskl ;
-     #                ; arc_welder_g90_influences_extruder = False
-     #            """
-     #    test_file = StringIO(test_string)
-     #    num_tries = 100000
-     #    start_time = time.perf_counter()
-     #    while num_tries > 0:
-     #        num_tries -= 1
-     #        utilities._search_gcode_file(test_file, self.search_functions)
-     #        test_file.seek(0)
-     #    end_time = time.perf_counter()
-     #    print ("Fininshed in {0:.1f} seconds".format(end_time - start_time))
 
+    #    test_string = """
+    #                ; Comment
+    #                ; Copyright(C) 2020 - Brad Hochgesang
+    #                ;  AcWelder   :POSTFIX= .aw, Prefix = \\\"arc\\,welded\\\", resolution-mm = 0.2
+    # afjdklsafjdskl ;
+    #                ; arc_welder_g90_influences_extruder = False
+    #            """
+    #    test_file = StringIO(test_string)
+    #    num_tries = 100000
+    #    start_time = time.perf_counter()
+    #    while num_tries > 0:
+    #        num_tries -= 1
+    #        utilities._search_gcode_file(test_file, self.search_functions)
+    #        test_file.seek(0)
+    #    end_time = time.perf_counter()
+    #    print ("Fininshed in {0:.1f} seconds".format(end_time - start_time))
 
     def test_parsing_ignore(self):
         test_string = ""
@@ -192,7 +193,6 @@ class TestGcodeSearch(unittest.TestCase):
             utilities.parse_settings_comment(test_string, self.tag, self.settings),
             {"RESOLUTION-MM": 0}
         )
-
 
     def test_percent_parameter(self):
         # Test common non results

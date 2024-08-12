@@ -24,11 +24,11 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-import unittest
 import os
 import re
-import json
-from octoprint_arc_welder.firmware_checker import FirmwareChecker, PrinterRequest
+import unittest
+
+from octoprint_arc_welder.firmware_checker import FirmwareChecker
 
 
 class TestFirmwareChecker(unittest.TestCase):
@@ -50,7 +50,8 @@ class TestFirmwareChecker(unittest.TestCase):
             "functions": {
                 "is_firmware_type": {"regex": r"^(?:\s*)RegexFirmware(\s*)", "key": "FIRMWARE_NAME"},
                 "version": {"regex": r"^(?:\s*)RegexFirmware(?:\s*)([0-9A-Za-z\.]+)", "key": "FIRMWARE_NAME"},
-                "build_date": {"regex": r"^(?:\s*)RegexFirmware(?:\s*)(?:[0-9A-Za-z\.]+)(?:\s*)([0-9\-]{4,})", "key": "FIRMWARE_NAME"},
+                "build_date": {"regex": r"^(?:\s*)RegexFirmware(?:\s*)(?:[0-9A-Za-z\.]+)(?:\s*)([0-9\-]{4,})",
+                               "key": "FIRMWARE_NAME"},
                 "arcs_enabled": {"regex": r"(?i)(?:.*)(HASARCS:1)"},
                 "arcs_not_enabled": {"regex": r"\s*(0)\s*", "key": "HASARCS"}
             },
@@ -165,7 +166,6 @@ class TestFirmwareChecker(unittest.TestCase):
         self.assertEqual(firmware_info["guid"], firmware_guid)
         # Test is_future
         self.assertTrue(firmware_info.get("is_future", None))
-
 
     def test_prusa_buddy_firmware_version_response(self):
         # Prusa Buddy Firmware <4.0.3

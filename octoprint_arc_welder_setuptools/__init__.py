@@ -25,8 +25,9 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 
-from distutils import version
 import functools
+
+from distutils import version
 
 
 @functools.total_ordering

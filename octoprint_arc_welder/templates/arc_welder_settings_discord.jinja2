@@ -28,10 +28,10 @@
         <fieldset>
             <legend>{{ _('Discord Bot settings') }}</legend>
             <div style="clear:both">
-                 <small>{{ _("See the GitHub README.md for how to set up a bot and get the channel ID.
+                <small>{{ _("See the GitHub README.md for how to set up a bot and get the channel ID.
                      Allowed users should be a list of discord user ID's.
                      If allowed users is blank, all users can use the bot") }}
-                 </small>
+                </small>
             </div>
             <div class="control-group">
                 <label class="control-label">{{ _('Bot nickname') }}</label>
@@ -42,7 +42,8 @@
             <div class="control-group">
                 <label class="control-label">{{ _('Bot avatar URL') }}</label>
                 <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: plugin_settings().discord.bot_avatar"/>
+                    <input type="text" class="input-block-level"
+                           data-bind="value: plugin_settings().discord.bot_avatar"/>
                 </div>
             </div>
         </fieldset>
@@ -57,19 +58,22 @@
             <div class="control-group">
                 <label class="control-label">{{ _('Webhook thumbnails URL') }}</label>
                 <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: plugin_settings().discord.wh_thumbnails"/>
+                    <input type="text" class="input-block-level"
+                           data-bind="value: plugin_settings().discord.wh_thumbnails"/>
                 </div>
             </div>
             <div class="control-group">
                 <label class="control-label">{{ _('Gcodes files folder URL') }}</label>
                 <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: plugin_settings().discord.gcode_dir_path"/>
+                    <input type="text" class="input-block-level"
+                           data-bind="value: plugin_settings().discord.gcode_dir_path"/>
                 </div>
             </div>
             <div class="control-group">
                 <label class="control-label">{{ _('Picture files folder URL') }}</label>
                 <div class="controls">
-                    <input type="text" class="input-block-level" data-bind="value: plugin_settings().discord.picture_dir_path"/>
+                    <input type="text" class="input-block-level"
+                           data-bind="value: plugin_settings().discord.picture_dir_path"/>
                 </div>
             </div>
         </fieldset>

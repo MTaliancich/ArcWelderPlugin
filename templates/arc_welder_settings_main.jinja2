@@ -33,9 +33,9 @@
                 <div class="controls">
                     <label class="checkbox">
                         <input class="input-text" type="checkbox" id="arc_welder_enabled"
-                           data-bind="checked: plugin_settings().enabled"/> Enabled
+                               data-bind="checked: plugin_settings().enabled"/> Enabled
                         <a class="arc_welder_help" data-help-url="settings.enabled.md"
-                       data-help-title="Enable/Disable Arc Welder"></a>
+                           data-help-title="Enable/Disable Arc Welder"></a>
                     </label>
 
                 </div>
@@ -45,13 +45,15 @@
                 <div class="controls">
                     <div>
                         <div class="input-append">
-                            <input class="input-small" data-bind="value: plugin_settings().resolution_mm" id="arc_welder_resolution_mm" max="0.1"
+                            <input class="input-small" data-bind="value: plugin_settings().resolution_mm"
+                                   id="arc_welder_resolution_mm" max="0.1"
                                    min="0.001"
                                    required="required" step="0.001"
                                    type="number">
                             <span class="add-on">mm</span>
                         </div>
-                        (max deviation&nbsp;<strong>&#177;<span data-bind="text:  plugin_settings().resolution_mm()/2.0"></span>mm</strong>)
+                        (max deviation&nbsp;<strong>&#177;<span
+                            data-bind="text:  plugin_settings().resolution_mm()/2.0"></span>mm</strong>)
                         <a class="arc_welder_help" data-help-url="settings.resolution_mm.md"
                            data-help-title="Arc Resolution in MM"></a>
 
@@ -60,7 +62,8 @@
 
             </div>
             <div class="control-group">
-                <label class="control-label" for="arc_welder_path_percent_tolerance"><strong>Path Tolerance</strong></label>
+                <label class="control-label" for="arc_welder_path_percent_tolerance"><strong>Path
+                    Tolerance</strong></label>
                 <div class="controls">
                     <div class="input-append">
                         <input class="input-small" required="required" type="number" min="0.1" max="99"
@@ -89,15 +92,16 @@
             </div>
 
             <div class="control-group">
-                <label class="control-label" for="arc_welder_allow_dynamic_precision"><strong>Dynamic Gcode Precision</strong></label>
+                <label class="control-label" for="arc_welder_allow_dynamic_precision"><strong>Dynamic Gcode
+                    Precision</strong></label>
                 <div class="controls">
                     <label class="checkbox">
                         <input class="input-text" type="checkbox"
-                           id="arc_welder_allow_dynamic_precision"
-                           data-bind="checked: plugin_settings().allow_dynamic_precision">
+                               id="arc_welder_allow_dynamic_precision"
+                               data-bind="checked: plugin_settings().allow_dynamic_precision">
                         Enabled
                         <a class="arc_welder_help" data-help-url="settings.allow_dynamic_precision.md"
-                       data-help-title="Dynamic Gcode Precision"></a><br/>
+                           data-help-title="Dynamic Gcode Precision"></a><br/>
                     </label>
                 </div>
             </div>
@@ -151,16 +155,18 @@
                 </label>
                 <div class="controls">
                     <label class="checkbox">
-                        <input class="input-text" type="checkbox" id="arc_welder_extrusion_rate_variance_detection_enabled"
+                        <input class="input-text" type="checkbox"
+                               id="arc_welder_extrusion_rate_variance_detection_enabled"
                                data-bind="checked: plugin_settings().extrusion_rate_variance_detection_enabled">
                         Enabled
                         <a class="arc_welder_help" data-help-url="settings.extrusion_rate_variance_detection_enabled.md"
-                       data-help-title="Extrusion Rate Variance Detection"></a>
+                           data-help-title="Extrusion Rate Variance Detection"></a>
                     </label>
                 </div>
             </div>
             <div class="control-group" data-bind="visible:plugin_settings().extrusion_rate_variance_detection_enabled">
-                <label class="control-label" for="arc_welder_extrusion_rate_variance_percent"><strong>Extrusion Rate Variance Percent</strong></label>
+                <label class="control-label" for="arc_welder_extrusion_rate_variance_percent"><strong>Extrusion Rate
+                    Variance Percent</strong></label>
                 <div class="controls">
                     <div class="input-append">
                         <input class="input-small" required="required" type="number" min="0" max="1000"
@@ -177,24 +183,25 @@
                 <div class="controls">
                     <label class="checkbox">
                         <input class="input-text" type="checkbox"
-                           id="arc_welder_allow_3d_arcs"
-                           data-bind="checked: plugin_settings().allow_3d_arcs">
+                               id="arc_welder_allow_3d_arcs"
+                               data-bind="checked: plugin_settings().allow_3d_arcs">
                         Enabled
                         <a class="arc_welder_help" data-help-url="settings.allow_3d_arcs.md"
-                       data-help-title="Allow 3D Arcs (for vase mode)"></a><br/>
+                           data-help-title="Allow 3D Arcs (for vase mode)"></a><br/>
                     </label>
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="arc_welder_allow_travel_arcs"><strong>Travel Arcs (for laser engravers, CNC, etc.)</strong></label>
+                <label class="control-label" for="arc_welder_allow_travel_arcs"><strong>Travel Arcs (for laser
+                    engravers, CNC, etc.)</strong></label>
                 <div class="controls">
                     <label class="checkbox">
                         <input class="input-text" type="checkbox"
-                           id="arc_welder_allow_travel_arcs"
-                           data-bind="checked: plugin_settings().allow_travel_arcs">
+                               id="arc_welder_allow_travel_arcs"
+                               data-bind="checked: plugin_settings().allow_travel_arcs">
                         Enabled
                         <a class="arc_welder_help" data-help-url="settings.allow_travel_arcs.md"
-                       data-help-title="Allow Travel Arcs"></a><br/>
+                           data-help-title="Allow Travel Arcs"></a><br/>
                     </label>
                 </div>
             </div>
@@ -208,7 +215,7 @@
                                data-bind="checked: plugin_settings().max_gcode_length_detection_enabled">
                         Enabled
                         <a class="arc_welder_help" data-help-url="settings.max_gcode_length_detection_enabled.md"
-                       data-help-title="G2/G3 Max Length Restrictions"></a>
+                           data-help-title="G2/G3 Max Length Restrictions"></a>
                     </label>
                 </div>
             </div>
@@ -218,7 +225,8 @@
                 </label>
                 <div class="controls">
                     <div class="input-append">
-                        <input class="input-small" data-bind="value: plugin_settings().max_gcode_length" id="arc_welder_max_gcode_length"
+                        <input class="input-small" data-bind="value: plugin_settings().max_gcode_length"
+                               id="arc_welder_max_gcode_length"
                                max="255" min="30" required="required"
                                step="1"
                                type="number">
@@ -237,10 +245,10 @@
                 <div class="controls">
                     <label class="checkbox">
                         <input class="input-text" type="checkbox" id="arc_welder_overwrite_source_file"
-                           data-bind="checked: plugin_settings().overwrite_source_file">
+                               data-bind="checked: plugin_settings().overwrite_source_file">
                         Enabled
                         <a class="arc_welder_help" data-help-url="settings.overwrite_source_file.md"
-                       data-help-title="Overwrite Source File"></a>
+                           data-help-title="Overwrite Source File"></a>
                     </label>
                 </div>
             </div>
@@ -297,7 +305,8 @@
         <fieldset>
             <legend>Source File Options</legend>
             <div class="control-group">
-                <label class="control-label" for="arc_welder_source_file_delete"><strong>Source File Deletion</strong></label>
+                <label class="control-label" for="arc_welder_source_file_delete"><strong>Source File
+                    Deletion</strong></label>
                 <div class="controls">
                     <select class="input-xlarge" id="arc_welder_source_file_delete" data-bind="options: ArcWelder.SOURCE_FILE_DELETE_OPTIONS,
                         optionsText: 'name',
@@ -320,7 +329,7 @@
                                data-bind="checked: plugin_settings().use_octoprint_settings">
                         Enabled
                         <a class="arc_welder_help" data-help-url="settings.use_octoprint_settings.md"
-                       data-help-title="Use OctoPrint Settings"></a>
+                           data-help-title="Use OctoPrint Settings"></a>
                     </label>
                 </div>
             </div>
@@ -334,7 +343,7 @@
                                data-bind="checked: plugin_settings().g90_g91_influences_extruder">
                         Enabled
                         <a class="arc_welder_help" data-help-url="settings.g90_g91_influences_extruder.md"
-                       data-help-title="G90/G91 Influences Extruder"></a>
+                           data-help-title="G90/G91 Influences Extruder"></a>
                     </label>
                 </div>
             </div>
@@ -348,7 +357,7 @@
                                data-bind="checked: settings.feature_g90InfluencesExtruder">
                         Enabled - <i>from Octoprint Settings->Features</i>
                         <a class="arc_welder_help" data-help-url="settings.octoprint.g90_influences_extruder.md"
-                       data-help-title="G90 Influences Extruder - Octoprint Setting"></a>
+                           data-help-title="G90 Influences Extruder - Octoprint Setting"></a>
                     </label>
                 </div>
             </div>
@@ -364,14 +373,16 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="arc_welder_check_for_updates"><strong>Firmware Library</strong></label>
+                <label class="control-label" for="arc_welder_check_for_updates"><strong>Firmware
+                    Library</strong></label>
                 <div class="controls">
                     <button type="button" id="arc_welder_check_for_updates" class="btn"
-                        data-bind="
+                            data-bind="
                         click: function(){firmware_info.checkForFirmwareInfoUpdates();},
                         disable: (firmware_info.checking_for_firmware_info_updates() || !firmware_info.loaded())"
-                        title="Check for new firmware information from the repository.">
-                        <i class="fa fa-spinner fa-spin" data-bind="visible: firmware_info.checking_for_firmware_info_updates"></i>
+                            title="Check for new firmware information from the repository.">
+                        <i class="fa fa-spinner fa-spin"
+                           data-bind="visible: firmware_info.checking_for_firmware_info_updates"></i>
                         <span>Check for Updates</span>
                     </button>
                     <a class="arc_welder_help" data-help-url="settings.check_for_updates.md"
@@ -381,10 +392,12 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="arc_welder_firmware_types_version"><strong>Library Version</strong></label>
+                <label class="control-label" for="arc_welder_firmware_types_version"><strong>Library
+                    Version</strong></label>
                 <div class="controls">
                     <div class="control-text">
-                        <span id="arc_welder_firmware_types_version" data-bind="text:firmware_info.firmware_types_info().version"></span>
+                        <span id="arc_welder_firmware_types_version"
+                              data-bind="text:firmware_info.firmware_types_info().version"></span>
                     </div>
                 </div>
             </div>
@@ -392,7 +405,8 @@
                 <label class="control-label" for="arc_welder_last_checked_date"><strong>Last Check Date</strong></label>
                 <div class="controls">
                     <div class="control-text">
-                        <span id="arc_welder_last_checked_date" data-bind="text:firmware_info.firmware_types_info().last_checked_date"></span>
+                        <span id="arc_welder_last_checked_date"
+                              data-bind="text:firmware_info.firmware_types_info().last_checked_date"></span>
                         <span data-bind="visible: !firmware_info.firmware_types_info().last_check_success"> - Failed</span>
                         <br>
                     </div>
@@ -401,7 +415,8 @@
         </fieldset>
         <fieldset>
             <legend>Firmware Compensation</legend>
-            <p>Please read the help files before using.  Click on the blue question marks next to each setting for info.</p>
+            <p>Please read the help files before using. Click on the blue question marks next to each setting for
+                info.</p>
             <div class="control-group">
                 <label class="control-label" for="arc_welder_firmware_compensation_enabled">
                     <strong>Enabled</strong>
@@ -411,12 +426,13 @@
                         <input class="input-text" type="checkbox" id="arc_welder_firmware_compensation_enabled"
                                data-bind="checked: plugin_settings().firmware_compensation_enabled">
                         <a class="arc_welder_help" data-help-url="settings.firmware_compensation_enabled.md"
-                       data-help-title="Firmware Compensation Enabled"></a>
+                           data-help-title="Firmware Compensation Enabled"></a>
                     </label>
                 </div>
             </div>
             <div class="control-group" data-bind="visible:plugin_settings().firmware_compensation_enabled">
-                <label class="control-label" for="arc_welder_min_arc_segments"><strong>Minimum Arc Segments</strong></label>
+                <label class="control-label" for="arc_welder_min_arc_segments"><strong>Minimum Arc
+                    Segments</strong></label>
                 <div class="controls">
                     <input class="input-small" required="required" type="number" min="3" max="100000"
                            step="1" id="arc_welder_min_arc_segments"
@@ -426,7 +442,8 @@
                 </div>
             </div>
             <div class="control-group" data-bind="visible:plugin_settings().firmware_compensation_enabled">
-                <label class="control-label" for="arc_welder_mm_per_arc_segment"><strong>MM Per Arc Segment</strong></label>
+                <label class="control-label" for="arc_welder_mm_per_arc_segment"><strong>MM Per Arc
+                    Segment</strong></label>
                 <div class="controls">
                     <input class="input-small" required="required" type="number" min="0.1" max="1000"
                            step="0.1" id="arc_welder_mm_per_arc_segment"
@@ -435,7 +452,8 @@
                        data-help-title="MM Per Arc Segment"></a>
                 </div>
             </div>
-            <p><span class="label label-important">Warning</span> This is an experimental feature.  Do not adjust the setting in this section unless you are compensating for known firmware issues.</p>
+            <p><span class="label label-important">Warning</span> This is an experimental feature. Do not adjust the
+                setting in this section unless you are compensating for known firmware issues.</p>
         </fieldset>
         <fieldset>
             <legend>Tab Options</legend>
@@ -469,19 +487,21 @@
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="arc_welder_show_started_notification"><strong>Pre-Processing Started</strong></label>
+                <label class="control-label" for="arc_welder_show_started_notification"><strong>Pre-Processing
+                    Started</strong></label>
                 <div class="controls">
                     <label class="checkbox">
                         <input class="input-text" type="checkbox" id="arc_welder_show_started_notification"
                                data-bind="checked: plugin_settings().notification_settings.show_started_notification">
                         Enabled
                         <a class="arc_welder_help" data-help-url="settings.show_started_notification.md"
-                       data-help-title="Show Pre-Processing Started Notification"></a>
+                           data-help-title="Show Pre-Processing Started Notification"></a>
                     </label>
                 </div>
             </div>
             <div class="control-group">
-                <label class="control-label" for="arc_welder_show_completed_notification"><strong>Pre-Processing Completed</strong></label>
+                <label class="control-label" for="arc_welder_show_completed_notification"><strong>Pre-Processing
+                    Completed</strong></label>
                 <div class="controls">
                     <label class="checkbox">
                         <input class="input-text" type="checkbox"
@@ -489,7 +509,7 @@
                                data-bind="checked: plugin_settings().notification_settings.show_completed_notification">
                         Enabled
                         <a class="arc_welder_help" data-help-url="settings.show_completed_notification.md"
-                       data-help-title="Show Pre-Processing Completed Notification"></a>
+                           data-help-title="Show Pre-Processing Completed Notification"></a>
                     </label>
                 </div>
             </div>

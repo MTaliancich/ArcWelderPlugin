@@ -23,27 +23,27 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ###################################################################################*/
-$(function() {
+$(function () {
 
     function ArcWelderSettingsViewModel(parameters) {
         var self = this;
 
         self.settings = parameters[0];
-        self.plugin_settings = ko.observable({feature_settings:null});
+        self.plugin_settings = ko.observable({feature_settings: null});
         self.firmware_info = {};
         self.data = ko.observable();
         self.data.logging_levels = [
-            {name:"Verbose", value: 5},
-            {name:"Debug", value: 10},
-            {name:"Info", value: 20},
-            {name:"Warning", value: 30},
+            {name: "Verbose", value: 5},
+            {name: "Debug", value: 10},
+            {name: "Info", value: 20},
+            {name: "Warning", value: 30},
         ];
         self.logger_name_add = ko.observable();
         self.logger_level_add = ko.observable();
         self.data.all_logger_names = ["arc_welder.__init__", "arc_welder.gcode_conversion", "arc_welder.firmware_checker"];
         self.data.default_log_level = 20;
 
-        self.auto_pre_processing_enabled = ko.pureComputed(function(){
+        self.auto_pre_processing_enabled = ko.pureComputed(function () {
             var file_processing_type = self.plugin_settings().feature_settings.file_processing();
             return (
                 file_processing_type == ArcWelder.FILE_PROCESSING_AUTO ||
@@ -51,7 +51,7 @@ $(function() {
             )
         });
 
-        self.print_after_automatic_processing_enabled = ko.pureComputed(function(){
+        self.print_after_automatic_processing_enabled = ko.pureComputed(function () {
             var file_processing_type = self.plugin_settings().feature_settings.print_after_processing();
             return (
                 file_processing_type == ArcWelder.PRINT_AFTER_PROCESSING_AUTO ||
@@ -59,18 +59,18 @@ $(function() {
             )
         });
 
-        self.select_after_auto_processing_enabled = ko.pureComputed(function(){
+        self.select_after_auto_processing_enabled = ko.pureComputed(function () {
             var file_processing_type = self.plugin_settings().feature_settings.select_after_processing();
             return (
                 file_processing_type == ArcWelder.SELECT_FILE_AFTER_PROCESSING_AUTO ||
                 file_processing_type == ArcWelder.SELECT_FILE_AFTER_PROCESSING_BOTH
             )
         });
-        self.sendwebhook_after_processing_enabled = ko.pureComputed(function(){
+        self.sendwebhook_after_processing_enabled = ko.pureComputed(function () {
             var file_processing_type = self.plugin_settings().feature_settings.sendwebhook_after_processing();
             return file_processing_type
         });
-        self.onBeforeBinding = function() {
+        self.onBeforeBinding = function () {
             // Make plugin setting access a little more terse
             self.plugin_settings(self.settings.settings.plugins.arc_welder);
             self.firmware_info = ArcWelder.Tab.firmware_info;
@@ -91,7 +91,7 @@ $(function() {
             }, self);
         };
 
-        self.onAfterBinding = function() {
+        self.onAfterBinding = function () {
             ArcWelder.Help.bindHelpLinks("div#arc_welder_settings");
 
         };
@@ -100,7 +100,7 @@ $(function() {
             for (var index = 0; index < self.plugin_settings().logging_configuration.enabled_loggers().length; index++) {
                 var logger = self.plugin_settings().logging_configuration.enabled_loggers()[index];
                 var cur_name = "";
-                if(ko.isObservable(logger.name))
+                if (ko.isObservable(logger.name))
                     cur_name = logger.name();
                 else
                     cur_name = logger.name;
@@ -129,11 +129,14 @@ $(function() {
             //console.log("Adding logger");
             var index = self.get_enabled_logger_index_by_name(self.logger_name_add());
             if (index === -1) {
-                self.plugin_settings().logging_configuration.enabled_loggers.push({'name': self.logger_name_add(), 'log_level': self.logger_level_add()});
+                self.plugin_settings().logging_configuration.enabled_loggers.push({
+                    'name': self.logger_name_add(),
+                    'log_level': self.logger_level_add()
+                });
             }
         };
 
-        self.restoreDefaultSettings = function() {
+        self.restoreDefaultSettings = function () {
             PNotifyExtensions.showConfirmDialog(
                 "restore_default_settings",
                 "Restore Arc Welder Default Settings",

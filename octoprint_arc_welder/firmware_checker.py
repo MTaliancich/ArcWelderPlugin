@@ -25,23 +25,27 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 from __future__ import unicode_literals
-import requests
-import uuid
-import threading
-import re
-import json
-import os
-import shutil
+
 import copy
 import datetime
+import json
+import os
+import re
+import shutil
+import threading
+import uuid
 from datetime import datetime
+
+import requests
 from pkg_resources import parse_version
-import octoprint_arc_welder.utilities as utilities
+
 import octoprint_arc_welder.log as log
+import octoprint_arc_welder.utilities as utilities
 
 # Ugly hack so I don't have to access a private type in python 2.7
 try:
     from typing import Pattern
+
     RegexPattern = Pattern
 except ImportError:
     RegexPattern = type(re.compile('hello, world'))
@@ -53,7 +57,6 @@ logger = logging_configurator.get_logger(__name__)
 
 
 class FirmwareChecker:
-
     DEFAULT_TIMEOUT_MS = 600000  # 1 minute
     ARCWELDER_TAG = 'arc_welder'
     FIRMWARE_TYPES_JSON_PATH = ["firmware", "types.json"]
@@ -143,8 +146,8 @@ class FirmwareChecker:
                 default_types_library = json.load(f)
 
             load_defaults = (
-                not types_library or "version" not in types_library
-                or parse_version(types_library["version"]) < parse_version(default_types_library["version"])
+                    not types_library or "version" not in types_library
+                    or parse_version(types_library["version"]) < parse_version(default_types_library["version"])
             )
             if load_defaults:
                 types_library = default_types_library
@@ -183,7 +186,8 @@ class FirmwareChecker:
                     self._current_firmware_info = json.load(f)
         except ValueError as e:
             logger.error(e)
-            logger.error("Error loading the current firmware info from '%s'.  Could not parse JSON.", self._current_firmware_path)
+            logger.error("Error loading the current firmware info from '%s'.  Could not parse JSON.",
+                         self._current_firmware_path)
 
     def _save_current_firmware_info(self, firmware_info):
         try:
@@ -199,7 +203,8 @@ class FirmwareChecker:
             logger.exception("Error saving current firmware info to: %s", self._current_firmware_path)
         except ValueError as e:
             logger.error(e)
-            logger.exception("Error saving current firmware to '%s': Could not convert to JSON.", self._current_firmware_path)
+            logger.exception("Error saving current firmware to '%s': Could not convert to JSON.",
+                             self._current_firmware_path)
 
     def check_for_updates(self):
         result = {
@@ -233,7 +238,8 @@ class FirmwareChecker:
             except Exception as ex:
                 logger.error(ex)
                 logger.exception("an unknown exception occurred while checking for firmware info updates.")
-                result["error"] = "An unexpected exception occurred while checking for firmware updates.  See plugin.arcwelder.log for details."
+                result[
+                    "error"] = "An unexpected exception occurred while checking for firmware updates.  See plugin.arcwelder.log for details."
 
             # load the retrieved firmware info, or load defaults if none exist.
             self._load_firmware_types(False)
@@ -291,7 +297,8 @@ class FirmwareChecker:
 
         if not response_lines or len(response_lines) < 1:
             # no response, exit
-            result["error"] = "Your printer did not respond to M115, or the request timed out.  Unable to detect firmware."
+            result[
+                "error"] = "Your printer did not respond to M115, or the request timed out.  Unable to detect firmware."
             return result
 
         # parse the response
@@ -686,6 +693,7 @@ class FirmwareChecker:
         return firmware_name.startswith("Marlin")
 
     REGEX_MARLIN_VERSION = re.compile(r"^Marlin\s([^\s]+)")
+
     @staticmethod
     def get_version_marlin(parsed_firmware_response):
         if "FIRMWARE_VERSION" in parsed_firmware_response:
@@ -747,7 +755,7 @@ class FirmwareChecker:
     @staticmethod
     def clean_version_klipper(version):
         try:
-            pos = version.index('-', version.index('.', version.index('.') + 1)+1)
+            pos = version.index('-', version.index('.', version.index('.') + 1) + 1)
             version = version[:pos] + '+' + version[pos + 1:]
         except ValueError:
             pass
@@ -776,7 +784,6 @@ class FirmwareChecker:
 
         return parsed_firmware_response["FirmwareChecker.MARLIN_EXTENDED_CAPABILITIES_KEY"].get("ARCS", True)
 
-
     # Parts of this function were copied from the Octoprint Source within util.com
     REGEX_PARSE_CAPABILITIES = re.compile(r"Cap:([A-Z0-9_]+):([A-Z0-9_]+)\s*")
     MARLIN_EXTENDED_CAPABILITIES_KEY = "EXTENDED_CAPABILITIES_REPORT"
@@ -803,15 +810,15 @@ class FirmwareChecker:
         # check to see if this is smoothieware.  We need to parse it differently than the others
         if "FIRMWARE_NAME:Smoothieware" in response_text:
             # first split with commas
-            split  = response_text.split(",")
+            split = response_text.split(",")
             for param in split:
                 # find the first colon, which separates the key from the value
                 index = param.find(":")
                 key = param[0:index].strip()
                 value = None
                 # get the value if there is any
-                if len(param)>index+1:
-                    value = param[index+1:].strip()
+                if len(param) > index + 1:
+                    value = param[index + 1:].strip()
 
                 if len(key) > 2 and key.startswith("X-"):
                     # if the key starts with X-, it is an extended capability
@@ -827,7 +834,7 @@ class FirmwareChecker:
 
             for i in range(0, len(split_line), 2):
                 key = split_line[i]
-                value = split_line[i+1]
+                value = split_line[i + 1]
                 result[key] = value.strip()
 
         if capabilities_text and FirmwareChecker.MARLIN_EXTENDED_CAPABILITIES_KEY not in result:
@@ -990,7 +997,7 @@ class FirmwareChecker:
 
     def _get_request_waiting_for_send(self):
         return self._printer_request.wait_for_gcode_sent() and not self._printer_request.gcode_sent
-    
+
     def _get_printer_response(self, request, timeout_ms=None):
         """Sends a request, gets a response."""
         # acquire the request lock in case we run this with threads in the future
@@ -1011,8 +1018,8 @@ class FirmwareChecker:
             try:
                 #### CANNOT SET JOB_ON_HOLD FOR SOME REASON!
                 # set the job_on_hold lock to prevent any jobs from printing
-                #logger.info("Acquiring the job_on_hold lock.")
-                #with self._printer.job_on_hold(True):
+                # logger.info("Acquiring the job_on_hold lock.")
+                # with self._printer.job_on_hold(True):
                 # set the current request
                 with self._request_lock:
                     self._printer_request = request
@@ -1035,7 +1042,7 @@ class FirmwareChecker:
                     self._printer.commands(request.commands, tags=tags)
 
                     # wait for a response
-                    event_is_set = self._request_signal.wait(timeout_ms/1000.0)
+                    event_is_set = self._request_signal.wait(timeout_ms / 1000.0)
                     if not event_is_set:
                         # we ran into a timeout while waiting for a response from the printer
                         logger.error("A timeout occurred while waiting for a response from the printer.")
@@ -1066,7 +1073,8 @@ class FirmwareChecker:
                     "on_gcode_sent: Gcode Sent : %s", cmd
                 )
                 if self._get_request_waiting_for_send():
-                    logger.verbose("on_gcode_sent:  Gcode sending for request: %s, gcode: %s", self._printer_request.name, cmd)
+                    logger.verbose("on_gcode_sent:  Gcode sending for request: %s, gcode: %s",
+                                   self._printer_request.name, cmd)
                     self._printer_request.check_sent(cmd)
                     if self._printer_request.gcode_sent:
                         logger.verbose("on_gcode_sent: Gcode sent for request: %s", self._printer_request.name)
@@ -1076,7 +1084,8 @@ class FirmwareChecker:
                         )
                 else:
                     logger.verbose(
-                        "on_gcode_sent: Not waiting for send for request: %s.  gcode: %s", self._printer_request.name, cmd
+                        "on_gcode_sent: Not waiting for send for request: %s.  gcode: %s", self._printer_request.name,
+                        cmd
                     )
 
     # noinspection PyUnusedLocal
@@ -1131,9 +1140,9 @@ class FirmwareChecker:
                         if (
                                 not self._printer_request.response_ended
                                 or (
-                                    self._printer_request.response_ended
-                                    and self._printer_request.append_final_response
-                                )
+                                self._printer_request.response_ended
+                                and self._printer_request.append_final_response
+                        )
                         ):
                             logger.verbose("on_gcode_received: Appending line to response.")
                             self._printer_request.response.append(clean_line)
@@ -1257,7 +1266,7 @@ class FirmwareFileUpdater:
             if (
                     "plugin_compatibility" in version_info and
                     not utilities.is_version_in_versions(plugin_version, version_info["plugin_compatibility"])
-             ):
+            ):
                 continue
             if parse_version(str(version_info["version"])) >= parse_version(str(current_version)):
                 # found a version!  Normally, this will be the first entry that passes the
@@ -1302,7 +1311,7 @@ class FirmwareFileUpdater:
         # build up keys string
         return (
             "https://raw.githubusercontent.com/FormerLurker/ArcWelderPluginFirmwareInfo/main/{0}/types.json?nonce={1}"
-                .format(version_info["version_folder"], uuid.uuid4().hex)
+            .format(version_info["version_folder"], uuid.uuid4().hex)
         )
 
     @staticmethod
@@ -1312,7 +1321,7 @@ class FirmwareFileUpdater:
         if r.status_code != requests.codes.ok:
             message = (
                 "An invalid status code or {0} was returned while getting available firmware versions at {1}."
-                    .format(r.status_code, url)
+                .format(r.status_code, url)
             )
             raise FirmwareFileUpdaterError('invalid-status-code', message)
         if 'content-length' in r.headers and r.headers["content-length"] == 0:
@@ -1326,7 +1335,7 @@ class FirmwareFileUpdater:
         # build up keys string
         return (
             "https://raw.githubusercontent.com/FormerLurker/ArcWelderPluginFirmwareInfo/main/{0}/docs/{1}?nonce={2}"
-                .format(version_info["version_folder"], doc_name, uuid.uuid4().hex)
+            .format(version_info["version_folder"], doc_name, uuid.uuid4().hex)
         )
 
     @staticmethod

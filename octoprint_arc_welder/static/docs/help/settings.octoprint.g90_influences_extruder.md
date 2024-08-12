@@ -1,1 +1,3 @@
-This setting is controlled via Octoprint settings (not Arc Welder's Override) due to the 'Use Octoprint Settings' option.  You can find the Octoprint setting vis *OctoPrint Settings (wrench/spanner icon)->Features->G90/G91 overrides relative extruder mode*
+This setting is controlled via Octoprint settings (not Arc Welder's Override) due to the 'Use Octoprint Settings'
+option. You can find the Octoprint setting vis *OctoPrint Settings (wrench/spanner icon)->Features->G90/G91 overrides
+relative extruder mode*

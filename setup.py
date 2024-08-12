@@ -24,19 +24,15 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
+import platform
+import sys
+
+from packaging.version import Version
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
-from distutils.ccompiler import CCompiler
-from distutils.unixccompiler import UnixCCompiler
-from distutils.msvccompiler import MSVCCompiler
-from distutils.bcppcompiler import BCPPCompiler
-from distutils.cygwinccompiler import CygwinCCompiler
-from distutils.version import LooseVersion
-from distutils.sysconfig import customize_compiler
-from octoprint_arc_welder_setuptools import NumberedVersion
-import sys
-import platform
+
 import versioneer
+from octoprint_arc_welder_setuptools import NumberedVersion
 
 ########################################################################################################################
 # The plugin's identifier, has to be unique
@@ -50,9 +46,7 @@ plugin_name = "Arc Welder"
 # This can happen if the user installs from one of the .zip links in github, not generated with git archive
 fallback_version = "1.2.0"
 plugin_version = versioneer.get_version()
-if plugin_version == "0+unknown" or NumberedVersion(plugin_version) < NumberedVersion(
-    fallback_version
-):
+if plugin_version == "0+unknown" or NumberedVersion(plugin_version) < NumberedVersion(fallback_version):
     plugin_version = fallback_version
     try:
         # This generates version in the following form:
@@ -60,7 +54,7 @@ if plugin_version == "0+unknown" or NumberedVersion(plugin_version) < NumberedVe
         plugin_version += "+u." + versioneer.get_versions()["full-revisionid"][0:7]
     except Exception as e:
         print(e)
-    print("Unknown Version, falling back to " + plugin_version + ".")
+    print(f"Unknown Version, falling back to {plugin_version}.")
 
 plugin_cmdclass = versioneer.get_cmdclass()
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
@@ -90,7 +84,7 @@ plugin_requires = [
 
 import octoprint.server
 
-if LooseVersion(octoprint.server.VERSION) < LooseVersion("1.4"):
+if Version(octoprint.server.VERSION) < Version("1.4"):
     plugin_requires.extend(["flask_principal>=0.4,<1.0"])
 
 # enable faulthandler for python 3.
@@ -100,7 +94,7 @@ if (3, 0) < sys.version_info < (3, 3):
 
 # --------------------------------------------------------------------------------------------------------------------
 # More advanced options that you usually shouldn't have to touch follow after this point
-# --------------------------------------d------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------------------------
 
 # Additional package data to install for this plugin. The subfolders "templates", "static" and "translations" will
 # already be installed automatically if they exist. Note that if you add something here you'll also need to update
@@ -123,59 +117,39 @@ plugin_ignored_packages = []
 DEBUG = False
 # define compiler flags
 compiler_opts = {
-    CCompiler.compiler_type: {
-        "extra_compile_args": ["-O3", "-std=c++11"],
-        "extra_link_args": [],
-        "define_macros": [("IS_ARCWELDER_PLUGIN","1")],
-    },
-    MSVCCompiler.compiler_type: {
-        "extra_compile_args": ["/O2", "/GL", "/Gy", "/MD", "/EHsc"],
-        "extra_link_args": [],
-        "define_macros": [("IS_ARCWELDER_PLUGIN","1")],
-    },
-    UnixCCompiler.compiler_type: {
+    'unix': {
         "extra_compile_args": ["-O3", "-std=c++11", "-Wno-unknown-pragmas", '-v'],
         "extra_link_args": [],
-        "define_macros": [("IS_ARCWELDER_PLUGIN","1")],
+        "define_macros": [("IS_ARCWELDER_PLUGIN", "1")],
     },
-    BCPPCompiler.compiler_type: {
+    'msvc': {
+        "extra_compile_args": ["/O2", "/GL", "/Gy", "/MD", "/EHsc"],
+        "extra_link_args": [],
+        "define_macros": [("IS_ARCWELDER_PLUGIN", "1")],
+    },
+    'cygwin': {
         "extra_compile_args": ["-O3", "-std=c++11"],
         "extra_link_args": [],
-        "define_macros": [("IS_ARCWELDER_PLUGIN","1")],
-    },
-    CygwinCCompiler.compiler_type: {
-        "extra_compile_args": ["-O3", "-std=c++11"],
-        "extra_link_args": [],
-        "define_macros": [("IS_ARCWELDER_PLUGIN","1")],
+        "define_macros": [("IS_ARCWELDER_PLUGIN", "1")],
     },
 }
 
 if DEBUG:
     compiler_opts = {
-        CCompiler.compiler_type: {
-            "extra_compile_args": [],
-            "extra_link_args": [],
-            "define_macros": [("IS_ARCWELDER_PLUGIN","1"),("DEBUG_chardet", "1")],
-        },
-        MSVCCompiler.compiler_type: {
-            "extra_compile_args": ["/EHsc", "/Z7"],
-            "extra_link_args": ["/DEBUG"],
-            "define_macros": [("IS_ARCWELDER_PLUGIN","1")],
-        },
-        UnixCCompiler.compiler_type: {
+        'unix': {
             "extra_compile_args": ["-g"],
             "extra_link_args": ["-g"],
-            "define_macros": [("IS_ARCWELDER_PLUGIN","1")],
+            "define_macros": [("IS_ARCWELDER_PLUGIN", "1")],
         },
-        BCPPCompiler.compiler_type: {
+        'msvc': {
+            "extra_compile_args": ["/EHsc", "/Z7"],
+            "extra_link_args": ["/DEBUG"],
+            "define_macros": [("IS_ARCWELDER_PLUGIN", "1")],
+        },
+        'cygwin': {
             "extra_compile_args": [],
             "extra_link_args": [],
-            "define_macros": [("IS_ARCWELDER_PLUGIN","1")],
-        },
-        CygwinCCompiler.compiler_type: {
-            "extra_compile_args": [],
-            "extra_link_args": [],
-            "define_macros": [("IS_ARCWELDER_PLUGIN","1")],
+            "define_macros": [("IS_ARCWELDER_PLUGIN", "1")],
         },
     }
 
@@ -191,41 +165,26 @@ os_compiler_opts = {
 
 class buildExtSubclass(build_ext):
     def build_extensions(self):
-        print("Compiling PyGcodeArcConverter Extension with {0}.".format(self.compiler))
+        print(f"Compiling PyGcodeArcConverter Extension with {self.compiler}.")
         # get rid of -Wstrict-prototypes option, it just generates pointless warnings
-        customize_compiler(self.compiler)
-        try:
-            self.compiler.compiler_so.remove("-Wstrict-prototypes")
-        except (AttributeError, ValueError):
-            print(
-                "Unable to remove -Wstrict-prototypes or to add -Wno-unknown-pragmas."
-            )
-
+        # We handle customization directly since `distutils.sysconfig.customize_compiler` is deprecated.
         c = self.compiler
-        opts = [v for k, v in compiler_opts.items() if c.compiler_type == k]
+        opts = compiler_opts.get(c.compiler_type, {})
 
         # Add OS Specific Flags
         if platform.system() in os_compiler_opts:
             os_flags = os_compiler_opts[platform.system()]
-            for o in opts:
-                o["extra_compile_args"].extend(os_flags["extra_compile_args"])
-                o["extra_link_args"].extend(os_flags["extra_compile_args"])
-                o["define_macros"].extend(os_flags["define_macros"])
+            opts["extra_compile_args"].extend(os_flags["extra_compile_args"])
+            opts["extra_link_args"].extend(os_flags["extra_link_args"])
+            opts["define_macros"].extend(os_flags["define_macros"])
 
         for e2 in self.extensions:
-            for o in opts:
-                for attrib, value in o.items():
-                    getattr(e2, attrib).extend(value)
+            for attrib, value in opts.items():
+                getattr(e2, attrib).extend(value)
 
         for extension in self.extensions:
             print(
-                "Building Extensions for {0} - extra_compile_args:{1} - extra_link_args:{2} - define_macros:{3}".format(
-                    extension.name,
-                    extension.extra_compile_args,
-                    extension.extra_link_args,
-                    extension.define_macros
-                )
-            )
+                f"Building Extensions for {extension.name} - extra_compile_args:{extension.extra_compile_args} - extra_link_args:{extension.extra_link_args} - define_macros:{extension.define_macros}")
 
         build_ext.build_extensions(self)
 
@@ -264,7 +223,6 @@ cpp_gcode_parser = Extension(
     ],
 )
 
-
 additional_setup_parameters = {
     "ext_modules": [cpp_gcode_parser],
     "cmdclass": {"build_ext": buildExtSubclass},
@@ -272,17 +230,12 @@ additional_setup_parameters = {
 
 ########################################################################################################################
 
-
 try:
     import octoprint_setuptools
 except Exception as e:
     print(e)
     print(
-        "Could not import OctoPrint's setuptools, are you sure you are running that under "
-        "the same python installation that OctoPrint is installed under?"
-    )
-    import sys
-
+        "Could not import OctoPrint's setuptools, are you sure you are running that under the same python installation that OctoPrint is installed under?")
     sys.exit(-1)
 
 setup_parameters = octoprint_setuptools.create_plugin_setup_parameters(
@@ -302,7 +255,7 @@ setup_parameters = octoprint_setuptools.create_plugin_setup_parameters(
     cmdclass=plugin_cmdclass,
 )
 
-if len(additional_setup_parameters):
+if additional_setup_parameters:
     from octoprint.util import dict_merge
 
     setup_parameters = dict_merge(setup_parameters, additional_setup_parameters)

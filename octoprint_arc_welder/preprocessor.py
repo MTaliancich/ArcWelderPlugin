@@ -26,23 +26,24 @@
 ##################################################################################
 from __future__ import absolute_import
 from __future__ import unicode_literals
-import threading
-import octoprint_arc_welder.utilities as utilities
-import octoprint_arc_welder.log as log
-import time
-import shutil
+
 import copy
 import os
+import shutil
+import threading
+import time
 import uuid
-import PyArcWelder as converter  # must import AFTER log, else this will fail to log and may crash
 from collections import deque
 
+import PyArcWelder as converter  # must import AFTER log, else this will fail to log and may crash
+
+import octoprint_arc_welder.log as log
+import octoprint_arc_welder.utilities as utilities
 
 try:
     import queue
 except ImportError:
     import Queue as queue
-
 
 logging_configurator = log.LoggingConfigurator("arc_welder", "arc_welder.", "octoprint_arc_welder.")
 root_logger = logging_configurator.get_root_logger()
@@ -53,18 +54,19 @@ logger = logging_configurator.get_logger(__name__)
 class PreProcessorWorker(threading.Thread):
     """Watch for rendering jobs via a rendering queue.  Extract jobs from the queue, and spawn a rendering thread,
        one at a time for each rendering job.  Notify the calling thread of the number of jobs in the queue on demand."""
+
     def __init__(
-        self,
-        data_folder,
-        task_queue,
-        is_printing_callback,
-        start_callback,
-        progress_callback,
-        cancel_callback,
-        failed_callback,
-        success_callback,
-        completed_callback,
-        get_cancellations_callback
+            self,
+            data_folder,
+            task_queue,
+            is_printing_callback,
+            start_callback,
+            progress_callback,
+            cancel_callback,
+            failed_callback,
+            success_callback,
+            completed_callback,
+            get_cancellations_callback
     ):
         super(PreProcessorWorker, self).__init__()
         self._source_path = os.path.join(data_folder, "source.gcode")
@@ -105,9 +107,9 @@ class PreProcessorWorker(threading.Thread):
     def is_processing(self):
         with self.r_lock:
             return (
-                not self._incoming_task_queue.empty()
-                or self._is_processing
-                or len(self._task_deque) != 0
+                    not self._incoming_task_queue.empty()
+                    or self._is_processing
+                    or len(self._task_deque) != 0
             )
 
     def get_tasks(self):
@@ -238,7 +240,7 @@ class PreProcessorWorker(threading.Thread):
                 except Exception as e:
                     logger.exception(e)
                     logger.exception("An unhandled exception occurred while preprocessing the gcode file.")
-                    message = "An error occurred while preprocessing {0}.  Check plugin_arc_welder.log for details.".\
+                    message = "An error occurred while preprocessing {0}.  Check plugin_arc_welder.log for details.". \
                         format(task["processor_args"]["source_path"])
                     self._failed_callback(task, message)
                 finally:
@@ -249,7 +251,7 @@ class PreProcessorWorker(threading.Thread):
 
             except queue.Empty:
                 pass
-            
+
     def _process(self, task):
         self._start_callback(task)
         logger.info(
@@ -368,7 +370,9 @@ class PreProcessorWorker(threading.Thread):
                     if not removed_task.get("is_cancelled", False):
                         self._cancel_callback(removed_task, False)
                 else:
-                    logger.info("Unable to cancel  job with guid %s.  It may be completed, or it may have already been cancelled.", job_guid)
+                    logger.info(
+                        "Unable to cancel  job with guid %s.  It may be completed, or it may have already been cancelled.",
+                        job_guid)
 
     def _progress_received(self, progress):
         is_cancelled = False

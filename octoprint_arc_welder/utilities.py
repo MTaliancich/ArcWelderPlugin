@@ -26,14 +26,16 @@
 ##################################################################################
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from builtins import dict, str
 
-from pkg_resources import parse_version
-import six
-import os
 import ntpath
-from datetime import datetime
+import os
 import time
+from builtins import dict, str
+from datetime import datetime
+
+import six
+from pkg_resources import parse_version
+
 import octoprint_arc_welder.log as log
 
 logging_configurator = log.LoggingConfigurator("arc_welder", "arc_welder.", "octoprint_arc_welder.")
@@ -265,7 +267,8 @@ def parse_settings_comment(line, tag, settings_dict):
     from io import StringIO
     try:
         separated_parameters = csv.reader(
-            StringIO(parameters_string), delimiter=str(','), quotechar=str('"'), escapechar=str('\\'), doublequote=True, skipinitialspace=True,
+            StringIO(parameters_string), delimiter=str(','), quotechar=str('"'), escapechar=str('\\'), doublequote=True,
+            skipinitialspace=True,
             quoting=csv.QUOTE_MINIMAL
         )
     except (csv.Error, TypeError) as e:

@@ -56,11 +56,13 @@
                 <div class="row-fluid">
                     <div class="span12">
                         <Strong>Active Task:</Strong>&nbsp;
-                        <a data-bind="click: function(){cancelPreprocessing(processing_task());}" href="#" title="Cancel the Active Task"> <i
+                        <a data-bind="click: function(){cancelPreprocessing(processing_task());}" href="#"
+                           title="Cancel the Active Task"> <i
                                 class="fa fa-times text-error fa-lg"></i></a>
                         <span data-bind="visible: processing_task() && processing_task().task.octoprint_args.print_after_processing"
                               title="Will print after processing is completed.">&nbsp;<i class="fa fa-print fa-lg"></i>&nbsp;</span>
-                        <span data-bind="text: processing_task_file_name"></span><span data-bind="visible: is_processing">&nbsp;-&nbsp;<span
+                        <span data-bind="text: processing_task_file_name"></span><span
+                            data-bind="visible: is_processing">&nbsp;-&nbsp;<span
                             data-bind="text: processing_statistics.source_file_size.formatted"></span></span>
                     </div>
                 </div>
@@ -74,10 +76,12 @@
                         </div>
                     </div>
                 </div>
-                <div class="short-rows" data-bind="visible: processing_statistics.progress_statistics.percent_complete()>0">
+                <div class="short-rows"
+                     data-bind="visible: processing_statistics.progress_statistics.percent_complete()>0">
                     <div data-bind="template: {name: 'arc_welder_statistics', data: processing_statistics, if: is_processing}"></div>
                 </div>
-                <div class="short-rows" data-bind="visible: processing_statistics.progress_statistics.percent_complete()==0">
+                <div class="short-rows"
+                     data-bind="visible: processing_statistics.progress_statistics.percent_complete()==0">
                     <p>Loading Statistics <i class="fa fa-spinner fa-spin"></i></p>
                 </div>
 
@@ -417,7 +421,7 @@
                 </div>
                 <div class="row-fluid">
                     <div class="span4 text-right">
-                        <strong >G2/G3 Max Length:</strong>
+                        <strong>G2/G3 Max Length:</strong>
                     </div>
                     <div class="span8">
                         <span data-bind="visible: plugin_settings.max_gcode_length_detection_enabled, text: max_gcode_length_string"></span>

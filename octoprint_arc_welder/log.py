@@ -25,9 +25,11 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 from __future__ import unicode_literals
-import logging
+
 import datetime as datetime
+import logging
 import os
+
 import six
 from octoprint.logging.handlers import (
     AsyncLogHandlerMixin,
@@ -60,6 +62,8 @@ def verbose(self, msg, *args, **kwargs):
 
 
 logging.Logger.verbose = verbose
+
+
 # end custom log level - VERBOSE
 
 

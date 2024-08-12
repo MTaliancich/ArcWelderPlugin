@@ -41,19 +41,19 @@ $(function () {
             self.title = title;
             self.subtitle = subtitle;
             self.close = function () {
-                if (self.loader != null)
-                {
+                if (self.loader != null) {
                     self.loader.remove();
-                };
+                }
+                ;
             };
 
             self.update = function (percent_complete, progress_text) {
                 self.notice.find(".remove_button").remove();
 
-                if (self.$progress == null)
-                {
+                if (self.$progress == null) {
                     return null;
-                };
+                }
+                ;
                 if (percent_complete < 0)
                     percent_complete = 0;
                 if (percent_complete > 100)
@@ -65,7 +65,7 @@ $(function () {
                 }
                 var percent_complete_text = percent_complete.toFixed(1);
                 self.$progress.width(percent_complete_text + "%").attr("aria-valuenow", percent_complete_text).find("span").html(percent_complete_text + "%");
-                self.$progressBarText.text (percent_complete_text + "%");
+                self.$progressBarText.text(percent_complete_text + "%");
                 self.$progressText.html(progress_text);
                 return self;
             };

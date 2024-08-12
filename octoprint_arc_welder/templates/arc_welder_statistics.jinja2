@@ -25,11 +25,11 @@
 ##################################################################################-->
 <script type="text/html" id="arc_welder_statistics">
     <div class="row-fluid">
-                    <div class="span4 text-right"><strong>Source File:</strong></div>
-                    <div class="span8">
-                        <span data-bind="text:source_name, attr:{title:source_name}"></span>
-                    </div>
-                </div>
+        <div class="span4 text-right"><strong>Source File:</strong></div>
+        <div class="span8">
+            <span data-bind="text:source_name, attr:{title:source_name}"></span>
+        </div>
+    </div>
     <div class="row-fluid">
         <div class="span4 text-right"><strong>Target File:</strong></div>
         <div class="span8">
@@ -136,7 +136,7 @@
                 <div class="span12">
                     <h5>
                         <a id="arc_welder_show_extrusion_retraction_statistics" href="#" class="no-underline"
-                            data-bind="arc_welder_toggle: { class_showing: 'fa-caret-down', class_hiding: 'fa-caret-right', container: '#arc-welder-extrusion-retraction-stats', toggle_observable: combined_detail_visible }">
+                           data-bind="arc_welder_toggle: { class_showing: 'fa-caret-down', class_hiding: 'fa-caret-right', container: '#arc-welder-extrusion-retraction-stats', toggle_observable: combined_detail_visible }">
                             Combined
                             <i class="fa fa-no-shadow fa-caret-down"></i>
                         </a>
@@ -154,7 +154,7 @@
                 <div class="span12">
                     <h5>
                         <a id="arc_welder_show_extrusion_statistics" href="#" class="no-underline"
-                            data-bind="arc_welder_toggle: { class_showing: 'fa-caret-down', class_hiding: 'fa-caret-right', container: '#arc-welder-extrusion-stats', toggle_observable: extrusion_detail_visible }">
+                           data-bind="arc_welder_toggle: { class_showing: 'fa-caret-down', class_hiding: 'fa-caret-right', container: '#arc-welder-extrusion-stats', toggle_observable: extrusion_detail_visible }">
                             Extrusion
                             <i class="fa fa-no-shadow fa-caret-down"></i>
                         </a>
@@ -172,13 +172,14 @@
                 <div class="span12">
                     <h5>
                         <a id="arc_welder_show_retraction_statistics" href="#" class="no-underline"
-                            data-bind="arc_welder_toggle: { class_showing: 'fa-caret-down', class_hiding: 'fa-caret-right', container: '#arc-welder-retraction-stats', toggle_observable: retraction_detail_visible }">
+                           data-bind="arc_welder_toggle: { class_showing: 'fa-caret-down', class_hiding: 'fa-caret-right', container: '#arc-welder-retraction-stats', toggle_observable: retraction_detail_visible }">
                             Retraction
                             <i class="fa fa-no-shadow fa-caret-down"></i>
                         </a>
                     </h5>
                     <div id="arc-welder-retraction-stats" class="text-center">
-                        <pre class="text-center statistics-text"><div data-bind="html: retraction_statistics.statistics_text"></div></pre>
+                        <pre class="text-center statistics-text"><div
+                                data-bind="html: retraction_statistics.statistics_text"></div></pre>
                     </div>
                 </div>
             </div>
@@ -188,7 +189,7 @@
                 <div class="span12">
                     <h5>
                         <a id="arc_welder_show_travel_statistics" href="#" class="no-underline"
-                            data-bind="arc_welder_toggle: { class_showing: 'fa-caret-down', class_hiding: 'fa-caret-right', container: '#arc-welder-travel-stats', toggle_observable: travel_detail_visible }">
+                           data-bind="arc_welder_toggle: { class_showing: 'fa-caret-down', class_hiding: 'fa-caret-right', container: '#arc-welder-travel-stats', toggle_observable: travel_detail_visible }">
                             Travel
                             <i class="fa fa-no-shadow fa-caret-down"></i>
                         </a>
