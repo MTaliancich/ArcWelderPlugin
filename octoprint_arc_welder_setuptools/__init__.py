@@ -27,17 +27,22 @@
 
 import functools
 
-from distutils import version
+from packaging.version import Version, InvalidVersion
 
 
 @functools.total_ordering
-class NumberedVersion(version.LooseVersion):
+class NumberedVersion:
     """
-        Prerelease tags will ALWAYS compare as less than a version with the same initial tags if the prerelease tag
-        exists.
+    Prerelease tags will ALWAYS compare as less than a version with the same initial tags if the prerelease tag
+    exists.
     """
 
-    def __init__(self, vstring: str = None, pre_release_tags=["rc"], development_tags=["dev"]):
+    def __init__(self, vstring: str = None, pre_release_tags=None, development_tags=None):
+        if pre_release_tags is None:
+            pre_release_tags = ["rc"]
+        if development_tags is None:
+            development_tags = ["dev"]
+
         # trim vstring
         if vstring is not None:
             vstring = vstring.strip()
@@ -66,20 +71,29 @@ class NumberedVersion(version.LooseVersion):
             # make sure there is info after the '+'
             if index < len(vstring) - 1:
                 self.commit_version_string = vstring[index + 1:]
-            # strip off the plus symbox from the vstring
+            # strip off the plus symbol from the vstring
             vstring = vstring[:index]
-        version.LooseVersion.__init__(self, vstring)
+
+        # Parse version using packaging.version.Version
+        try:
+            self.version = Version(vstring)
+        except InvalidVersion:
+            # Handle invalid version string as needed
+            self.version = None
+
+        self.parse(vstring)
 
     def parse(self, vstring):
-        version.LooseVersion.parse(self, vstring)
+        if not self.version:
+            return
+
         # save the version without commit level info
-        # set index = 0
         index = 0
-        tag_length = len(self.version)
+        tag_length = len(self.version.base_version)
         # determine tag version
         for i in range(index, tag_length):
             index = i
-            seg = self.version[i]
+            seg = self.version.base_version[i]
             if seg in self.pre_release_tags:
                 self.is_pre_release = True
                 break
@@ -87,7 +101,7 @@ class NumberedVersion(version.LooseVersion):
         # determine pre release version
         for i in range(index + 1, tag_length):
             index = i
-            seg = self.version[i]
+            seg = self.version.base_version[i]
             if seg in self.development_tags:
                 self.is_development = True
                 break
@@ -95,7 +109,7 @@ class NumberedVersion(version.LooseVersion):
         # determine development version
         for i in range(index + 1, tag_length):
             index = i
-            seg = self.version[index]
+            seg = self.version.base_version[index]
             self._development_version.append(seg)
 
         if len(self.commit_version_string) > 0:
@@ -128,20 +142,20 @@ class NumberedVersion(version.LooseVersion):
             self._commit_version.append("+")
             # next, add the number of commits we are ahead
             self._commit_version.append(
-                "u" if self.commits_ahead is None else self.commits_ahead
+                "u" if self.commits_ahead is None else str(self.commits_ahead)
             )
             # next add the guid
             self._commit_version.append(self.commit_guid)
             # if the version is dirty, add that segment
             if self.is_dirty:
                 self._commit_version.append("dirty")
-            self.version.extend(self._commit_version)
+            self.version = Version(f"{self.version.base_version}{''.join(self._commit_version)}")
 
     def __repr__(self):
         return "{cls} ('{vstring}', {prerel_tags})".format(
             cls=self.__class__.__name__,
             vstring=str(self),
-            prerel_tags=list(dict(self.pre_release_tags).keys()),
+            prerel_tags=list(dict.fromkeys(self.pre_release_tags).keys()),
         )
 
     def __str__(self):
@@ -151,7 +165,7 @@ class NumberedVersion(version.LooseVersion):
         """
         Compare versions and return True if the current version is less than other
         """
-        # first compare tags using LooseVersion
+        # first compare tags using Version
         cur_version = self._tag_version
         other_version = other._tag_version
         if cur_version < other_version:
@@ -161,11 +175,9 @@ class NumberedVersion(version.LooseVersion):
 
         # cur_version == other_version, compare pre-release
         if self.is_pre_release and not other.is_pre_release:
-            # the current version is a pre-release, but other is not.
             return True
 
         if other.is_pre_release and not self.is_pre_release:
-            # other is a pre-release, but the current version is not.
             return False
 
         cur_version = self.pre_release_tags
@@ -177,11 +189,9 @@ class NumberedVersion(version.LooseVersion):
 
         # now compare development versions
         if self.is_development and not other.is_development:
-            # the current version is development, but other is not.
             return True
 
         if other.is_development and not self.is_development:
-            # other is a development, but the current version is not.
             return False
         # Both versions are development, compare dev versions
         cur_version = self.development_tags
@@ -211,9 +221,9 @@ class NumberedVersion(version.LooseVersion):
 
     def __gt__(self, other):
         """
-            Compare versions and return True if the current version is greater than other
+        Compare versions and return True if the current version is greater than other
         """
-        # first compare tags using LooseVersion
+        # first compare tags using Version
         cur_version = self._tag_version
         other_version = other._tag_version
         if cur_version > other_version:
@@ -223,11 +233,9 @@ class NumberedVersion(version.LooseVersion):
 
         # cur_version == other_version, compare pre-release
         if self.is_pre_release and not other.is_pre_release:
-            # the current version is a pre-release, but other is not.
             return False
 
         if other.is_pre_release and not self.is_pre_release:
-            # other is a pre-release, but the current version is not.
             return True
 
         cur_version = self.pre_release_tags
@@ -239,11 +247,9 @@ class NumberedVersion(version.LooseVersion):
 
         # now compare development versions
         if self.is_development and not other.is_development:
-            # the current version is development, but other is not.
             return False
 
         if other.is_development and not self.is_development:
-            # other is a development, but the current version is not.
             return True
         # Both versions are development, compare dev versions
         cur_version = self.development_tags

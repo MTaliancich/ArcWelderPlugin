@@ -24,16 +24,11 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-import sys
 import unittest
+from io import StringIO
 
 import octoprint_arc_welder.utilities as utilities
 from octoprint_arc_welder import ArcWelderPlugin
-
-if sys.version_info[0] < 3:
-    from StringIO import StringIO
-else:
-    from io import StringIO
 
 
 class TestGcodeSearch(unittest.TestCase):

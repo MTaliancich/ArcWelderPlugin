@@ -36,7 +36,6 @@ from shutil import copyfile
 
 import octoprint.plugin
 import tornado
-from distutils.version import LooseVersion
 from flask import request, jsonify
 from octoprint.events import Events
 from octoprint.filemanager import FileDestinations
@@ -44,6 +43,7 @@ from octoprint.filemanager.storage import StorageError
 from octoprint.server import util, app
 from octoprint.server.util.flask import restricted_access
 from octoprint.server.util.tornado import LargeResponseHandler
+from packaging.version import Version
 from six import string_types
 
 import octoprint_arc_welder.firmware_checker as firmware_checker
@@ -87,7 +87,7 @@ class ArcWelderPlugin(
     octoprint.plugin.BlueprintPlugin,
     octoprint.plugin.EventHandlerPlugin
 ):
-    if LooseVersion(octoprint.server.VERSION) >= LooseVersion("1.4"):
+    if Version(octoprint.server.VERSION) >= Version("1.4"):
         import octoprint.access.permissions as permissions
 
         admin_permission = permissions.Permissions.ADMIN
@@ -1912,7 +1912,7 @@ class ArcWelderPlugin(
 
     def register_custom_routes(self, server_routes, *args, **kwargs):
         # version specific permission validator
-        if LooseVersion(octoprint.server.VERSION) >= LooseVersion("1.4"):
+        if Version(octoprint.server.VERSION) >= Version("1.4"):
             admin_validation_chain = [
                 util.tornado.access_validation_factory(app, util.flask.admin_validator),
             ]
@@ -1966,7 +1966,7 @@ class ArcWelderPlugin(
 
     def get_release_info(self):
         # Starting with V1.5.0 prerelease branches are supported!
-        if LooseVersion(octoprint.server.VERSION) < LooseVersion("1.5.0"):
+        if Version(octoprint.server.VERSION) < Version("1.5.0"):
             # Hack to attempt to get pre-release branches to work prior to 1.5.0
             # get the checkout type from the software updater
             prerelease_channel = None
@@ -2106,10 +2106,3 @@ from ._version import get_versions
 __version__ = get_versions()["version"]
 __git_version__ = get_versions()["full-revisionid"]
 del get_versions
-
-from . import _version
-
-__version__ = _version.get_versions()['version']
-
-from . import _version
-__version__ = _version.get_versions()['version']
