@@ -19,7 +19,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see the following:
-# https://github.com/FormerLurker/ArcWelderPlugin/blob/master/LICENSE
+# https://github.com/MTaliancich/ArcWelderPlugin/blob/master/LICENSE
 #
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
@@ -1922,9 +1922,9 @@ class ArcWelderPlugin(
         displayName="Arc Welder: Anti-Stutter",
         # version check: github repository
         type="github_release",
-        user="FormerLurker",
+        user="mtaliancich",
         repo="ArcWelderPlugin",
-        pip="https://github.com/FormerLurker/ArcWelderPlugin/archive/{target_version}.zip",
+        pip="https://github.com/MTaliancich/ArcWelderPlugin/archive/{target_version}.zip",
         stable_branch=dict(branch="master", commitish=["master"], name="Stable"),
         release_compare='custom',
         prerelease_branches=[

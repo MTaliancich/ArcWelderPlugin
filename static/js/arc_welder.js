@@ -18,7 +18,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see the following:
-# https://github.com/FormerLurker/ArcWelderPlugin/blob/master/LICENSE
+# https://github.com/MTaliancich/ArcWelderPlugin/blob/master/LICENSE
 #
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
@@ -1173,10 +1173,10 @@ $(function () {
                 return null;
             // If this is a commit, link to the commit
             if (self.version().includes("+")) {
-                return 'https://github.com/FormerLurker/ArcWelderPlugin/commit/' + git_version;
+                return 'https://github.com/MTaliancich/ArcWelderPlugin/commit/' + git_version;
             }
             // This is a release, link to the tag
-            return 'https://github.com/FormerLurker/ArcWelderPlugin/releases/tag/' + self.version();
+            return 'https://github.com/MTaliancich/ArcWelderPlugin/releases/tag/' + self.version();
         });
 
         self.version_text = ko.pureComputed(function () {

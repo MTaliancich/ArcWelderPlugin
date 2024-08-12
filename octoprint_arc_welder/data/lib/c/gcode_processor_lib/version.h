@@ -14,9 +14,9 @@ namespace utilities {
   static const std::string version_git_tagged_version = "2.0.0";
   static const std::string version_git_author = "FormerLurker";
   static const std::string version_git_repository_name = "ArcWelderLib";
-  static const std::string version_git_remote_url = "https://github.com/FormerLurker/ArcWelderLib.git";
-  static const std::string version_git_author_url = "https://github.com/FormerLurker";
-  static const std::string version_git_repository_url = "https://github.com/FormerLurker/ArcWelderLib";
+  static const std::string version_git_remote_url = "https://github.com/MTaliancich/ArcWelderLib.git";
+  static const std::string version_git_author_url = "https://github.com/MTaliancich";
+  static const std::string version_git_repository_url = "https://github.com/MTaliancich/ArcWelderLib";
 }
 #endif
 

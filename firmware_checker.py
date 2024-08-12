@@ -19,7 +19,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see the following:
-# https://github.com/FormerLurker/ArcWelderPlugin/blob/master/LICENSE
+# https://github.com/MTaliancich/ArcWelderPlugin/blob/master/LICENSE
 #
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
@@ -1275,7 +1275,7 @@ class FirmwareFileUpdater:
             # load the available versions
             r = requests.get(
                 (
-                    "https://raw.githubusercontent.com/FormerLurker/ArcWelderPluginFirmwareInfo/main/versions.json"
+                    "https://raw.githubusercontent.com/MTaliancich/ArcWelderPluginFirmwareInfo/main/versions.json"
                     "?nonce={0}".format(uuid.uuid4().hex)
                 ),
                 timeout=float(10)
@@ -1298,7 +1298,7 @@ class FirmwareFileUpdater:
     def _get_url_for_version(version_info):
         # build up keys string
         return (
-            "https://raw.githubusercontent.com/FormerLurker/ArcWelderPluginFirmwareInfo/main/{0}/types.json?nonce={1}"
+            "https://raw.githubusercontent.com/MTaliancich/ArcWelderPluginFirmwareInfo/main/{0}/types.json?nonce={1}"
             .format(version_info["version_folder"], uuid.uuid4().hex)
         )
 
@@ -1322,7 +1322,7 @@ class FirmwareFileUpdater:
     def _get_url_for_document(version_info, doc_name):
         # build up keys string
         return (
-            "https://raw.githubusercontent.com/FormerLurker/ArcWelderPluginFirmwareInfo/main/{0}/docs/{1}?nonce={2}"
+            "https://raw.githubusercontent.com/MTaliancich/ArcWelderPluginFirmwareInfo/main/{0}/docs/{1}?nonce={2}"
             .format(version_info["version_folder"], doc_name, uuid.uuid4().hex)
         )
 

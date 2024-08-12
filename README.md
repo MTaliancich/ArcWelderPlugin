@@ -48,7 +48,7 @@ right URL to do so. This should only be done in special cases and is not recomme
 
 ##### Installation from a URL
 
-1. Navigate to the [releases on Github](https://github.com/FormerLurker/ArcWelderPlugin/releases).
+1. Navigate to the [releases on Github](https://github.com/MTaliancich/ArcWelderPlugin/releases).
 2. Select the release you are interested in (the most recent release is at the top), and click on the version number.
    Note that **Pre-Releases** will be tagged, so avoid those if you are only interested in stable versions.
 3. Read the release notes carefully. It may contain important information!
@@ -102,7 +102,7 @@ These settings control the main aspects of the plugin and how your GCode file wi
   enough, an extremely large arc could be created that may have the wrong direction of rotation. The default value works
   fine for all of the gCode I've tested (it is about 1/7th of the radius of the worst errant arc I've encountered). If
   you discover that you need to adjust this setting because of errant arcs,
-  please [create an issue](https://github.com/FormerLurker/ArcWelderPlugin/issues/new) and let me know!  The default
+  please [create an issue](https://github.com/MTaliancich/ArcWelderPlugin/issues/new) and let me know!  The default
   setting is **1000000 mm** or **1KM**.
 * **File Processing Type** - There are three options here:
     * *Automatic Processing Only* - Newly uploaded files will be compressed automatically.
@@ -255,7 +255,7 @@ If your printer supports arc commands, it should move across a small arc from th
 know if your firmware supports arc movements, and I may add it to the list.
 
 **Warning**:  The above GCode has not been tested on all printers. Please use it with caution
-and [report any issues here](https://github.com/FormerLurker/ArcWelderPlugin/issues).
+and [report any issues here](https://github.com/MTaliancich/ArcWelderPlugin/issues).
 
 ### Other Firmware Considerations
 
@@ -332,7 +332,7 @@ If you are running Python 3, confirm that you have the dev package installed. Pl
 above for details.
 
 If you are still having problems, please (create an
-issue)[https://github.com/FormerLurker/ArcWelderPlugin/issues/new] and be sure to include the
+issue)[https://github.com/MTaliancich/ArcWelderPlugin/issues/new] and be sure to include the
 plugin_pluginmanager_console.log file, which you can find by opening the Octoprint Settings (wrench/spanner icon),
 clicking on the **Logging** menu, then finding and downloading the proper log file. Please upload the log file to (
 gist.github.com)[https://gist.github.com] and place a link within the issue. Also include the OctoPrint version, the
@@ -359,10 +359,10 @@ If you have a problem using *Arc Welder*, please first check the open and closed
 that is close to your own, please read through it and see if there are any suggested fixes. If your issue is unique,
 consider creating a new issue. However, please don't use the Github issues as general technical support. They are for
 reporting potential bugs in the software. When in doubt, go ahead
-and [create an issue here](https://github.com/formerlurker/arcwelderplugin/issues). I do want to help no matter what
+and [create an issue here](https://github.com/MTaliancich/arcwelderplugin/issues). I do want to help no matter what
 your problem is, but I spend so much time time dealing with issues and I'd rather be improving the software if at all
 possible. Bug reports improve software, tech support does not. Thanks in advance!
 
 ## License
 
-View the [*Arc Welder* license](https://raw.githubusercontent.com/FormerLurker/ArcWelderPlugin/master/LICENSE).
+View the [*Arc Welder* license](https://raw.githubusercontent.com/MTaliancich/ArcWelderPlugin/master/LICENSE).

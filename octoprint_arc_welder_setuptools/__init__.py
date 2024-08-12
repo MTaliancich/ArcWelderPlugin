@@ -19,7 +19,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see the following:
-# https://github.com/FormerLurker/ArcWelderPlugin/blob/master/LICENSE
+# https://github.com/MTaliancich/ArcWelderPlugin/blob/master/LICENSE
 #
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me

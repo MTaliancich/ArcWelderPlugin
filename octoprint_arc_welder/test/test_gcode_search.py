@@ -19,7 +19,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see the following:
-# https://github.com/FormerLurker/ArcWelderPlugin/blob/master/LICENSE
+# https://github.com/MTaliancich/ArcWelderPlugin/blob/master/LICENSE
 #
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
@@ -50,7 +50,7 @@ class TestGcodeSearch(unittest.TestCase):
     def test_file_search(self):
         # test is_welded
         test_string = """
-            ; Postprocessed by [ArcWelder](https://github.com/FormerLurker/ArcWelderLib)
+            ; Postprocessed by [ArcWelder](https://github.com/MTaliancich/ArcWelderLib)
             ; Copyright(C) 2020 - Brad Hochgesang
             ; arc_welder_resolution_mm = 0.05
             ; arc_welder_g90_influences_extruder = False
@@ -77,7 +77,7 @@ class TestGcodeSearch(unittest.TestCase):
             ; Comment
             ; Copyright(C) 2020 - Brad Hochgesang
             ; TESTCura-OctoPrintPluginTEST
-            ; Postprocessed by [ArcWelder](https://github.com/FormerLurker/ArcWelderLib)
+            ; Postprocessed by [ArcWelder](https://github.com/MTaliancich/ArcWelderLib)
             ; arc_welder_g90_influences_extruder = False
         """
         self.assertDictEqual(
@@ -251,7 +251,7 @@ class TestGcodeSearch(unittest.TestCase):
 
     def test_unicode(self):
         test_string = """
-                    ; Postprocessed by [ArcWelder](https://github.com/FormerLurker/ArcWelderLib)
+                    ; Postprocessed by [ArcWelder](https://github.com/MTaliancich/ArcWelderLib)
                     ; Copyright(C) 2020 - Brad Hochgesang
                     é; arc_welder_resolution_mm = 0.05 é
                     ; arc_welder_g90_influences_extruder = False

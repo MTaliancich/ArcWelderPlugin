@@ -18,7 +18,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see the following:
-# https://github.com/FormerLurker/ArcWelderPlugin/blob/master/LICENSE
+# https://github.com/MTaliancich/ArcWelderPlugin/blob/master/LICENSE
 #
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
@@ -156,7 +156,7 @@ $(function () {
                 // Someone removed the confirmation buttons, darnit!  Report the error and re-add the buttons.
                 var message = "Arc Welder detected the removal or addition of PNotify default confirmation buttons, " +
                     "which should not be done in a shared environment.  Some plugins may show strange behavior.  Please " +
-                    "report this error at https://github.com/FormerLurker/ArcWelder/issues.  ArcWelder will now clear " +
+                    "report this error at https://github.com/MTaliancich/ArcWelder/issues.  ArcWelder will now clear " +
                     "and re-add the default PNotify buttons.";
                 console.error(message);
 
