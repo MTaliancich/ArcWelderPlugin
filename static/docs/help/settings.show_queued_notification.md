@@ -1,1 +1,0 @@
-When enabled, display a popup message indicating that a file has been queued for processing. Default: Enabled
