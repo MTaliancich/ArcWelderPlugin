@@ -24,11 +24,11 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from __future__ import absolute_import
-from __future__ import unicode_literals
+
 
 import copy
 import os
+import queue
 import shutil
 import threading
 import time
@@ -39,11 +39,6 @@ import PyArcWelder as converter  # must import AFTER log, else this will fail to
 
 import octoprint_arc_welder.log as log
 import octoprint_arc_welder.utilities as utilities
-
-try:
-    import queue
-except ImportError:
-    import Queue as queue
 
 logging_configurator = log.LoggingConfigurator("arc_welder", "arc_welder.", "octoprint_arc_welder.")
 root_logger = logging_configurator.get_root_logger()

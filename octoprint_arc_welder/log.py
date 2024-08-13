@@ -24,7 +24,7 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from __future__ import unicode_literals
+
 
 import datetime as datetime
 import logging

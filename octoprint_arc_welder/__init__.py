@@ -24,8 +24,7 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from __future__ import absolute_import
-from __future__ import unicode_literals
+
 
 import copy
 import datetime
@@ -59,15 +58,9 @@ RC_MAINTENANCE = "rc/maintenance"
 
 # stupid python 2/python 3 compatibility imports
 
-try:
-    import queue
-except ImportError:
-    import Queue as queue
+import queue
 
-try:
-    import urllib.parse as urllibparse
-except ImportError:
-    import urllib as urllibparse
+import urllib.parse as urllibparse
 
 logging_configurator = log.LoggingConfigurator("arc_welder", "arc_welder.", "octoprint_arc_welder.")
 root_logger = logging_configurator.get_root_logger()
@@ -1179,7 +1172,7 @@ class ArcWelderPlugin(
             additional_metadata["thumbnail_src"] = thumbnail_src
 
         # add all the metadata items
-        for key, value in additional_metadata.items():
+        for key, value in list(additional_metadata.items()):
             if value is not None:
                 self._file_manager.set_additional_metadata(
                     FileDestinations.LOCAL,

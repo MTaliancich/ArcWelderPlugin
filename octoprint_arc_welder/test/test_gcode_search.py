@@ -30,10 +30,7 @@ import unittest
 import octoprint_arc_welder.utilities as utilities
 from octoprint_arc_welder import ArcWelderPlugin
 
-if sys.version_info[0] < 3:
-    from StringIO import StringIO
-else:
-    from io import StringIO
+from io import StringIO
 
 
 class TestGcodeSearch(unittest.TestCase):

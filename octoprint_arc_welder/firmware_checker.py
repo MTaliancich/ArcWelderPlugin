@@ -24,7 +24,7 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from __future__ import unicode_literals
+
 
 import copy
 import datetime
@@ -1342,7 +1342,7 @@ class FirmwareFileUpdater:
     def _get_docs_for_version(version_info, firmware_types):
         document_names = []
         # iterate the firmware type and versions and extract all of the help file names
-        for firmware_type_key, firmware_type in firmware_types["types"].items():
+        for firmware_type_key, firmware_type in list(firmware_types["types"].items()):
             if "help_file" in firmware_type:
                 document_names.append(firmware_type["help_file"])
             if "versions" in firmware_type:

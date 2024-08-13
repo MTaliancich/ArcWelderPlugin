@@ -1,4 +1,3 @@
-
 # This file helps to compute a version number in source trees obtained from
 # git-archive tarball (such as those provided by githubs download-from-tag
 # feature). Distribution tarballs (built by setup.py sdist) and build
@@ -12,12 +11,12 @@
 """Git implementation of _version.py."""
 
 import errno
+import functools
 import os
 import re
 import subprocess
 import sys
 from typing import Any, Callable, Dict, List, Optional, Tuple
-import functools
 
 
 def get_keywords() -> Dict[str, str]:
@@ -68,22 +67,24 @@ HANDLERS: Dict[str, Dict[str, Callable]] = {}
 
 def register_vcs_handler(vcs: str, method: str) -> Callable:  # decorator
     """Create decorator to mark a method as the handler of a VCS."""
+
     def decorate(f: Callable) -> Callable:
         """Store f in HANDLERS[vcs][method]."""
         if vcs not in HANDLERS:
             HANDLERS[vcs] = {}
         HANDLERS[vcs][method] = f
         return f
+
     return decorate
 
 
 def run_command(
-    commands: List[str],
-    args: List[str],
-    cwd: Optional[str] = None,
-    verbose: bool = False,
-    hide_stderr: bool = False,
-    env: Optional[Dict[str, str]] = None,
+        commands: List[str],
+        args: List[str],
+        cwd: Optional[str] = None,
+        verbose: bool = False,
+        hide_stderr: bool = False,
+        env: Optional[Dict[str, str]] = None,
 ) -> Tuple[Optional[str], Optional[int]]:
     """Call the given command(s)."""
     assert isinstance(commands, list)
@@ -109,26 +110,26 @@ def run_command(
             if e.errno == errno.ENOENT:
                 continue
             if verbose:
-                print("unable to run %s" % dispcmd)
+                print(("unable to run %s" % dispcmd))
                 print(e)
             return None, None
     else:
         if verbose:
-            print("unable to find command, tried %s" % (commands,))
+            print(("unable to find command, tried %s" % (commands,)))
         return None, None
     stdout = process.communicate()[0].strip().decode()
     if process.returncode != 0:
         if verbose:
-            print("unable to run %s (error)" % dispcmd)
-            print("stdout was %s" % stdout)
+            print(("unable to run %s (error)" % dispcmd))
+            print(("stdout was %s" % stdout))
         return None, process.returncode
     return stdout, process.returncode
 
 
 def versions_from_parentdir(
-    parentdir_prefix: str,
-    root: str,
-    verbose: bool,
+        parentdir_prefix: str,
+        root: str,
+        verbose: bool,
 ) -> Dict[str, Any]:
     """Try to determine the version from the parent directory name.
 
@@ -148,8 +149,8 @@ def versions_from_parentdir(
         root = os.path.dirname(root)  # up a level
 
     if verbose:
-        print("Tried directories %s but none started with prefix %s" %
-              (str(rootdirs), parentdir_prefix))
+        print(("Tried directories %s but none started with prefix %s" %
+               (str(rootdirs), parentdir_prefix)))
     raise NotThisMethod("rootdir doesn't start with parentdir_prefix")
 
 
@@ -183,9 +184,9 @@ def git_get_keywords(versionfile_abs: str) -> Dict[str, str]:
 
 @register_vcs_handler("git", "keywords")
 def git_versions_from_keywords(
-    keywords: Dict[str, str],
-    tag_prefix: str,
-    verbose: bool,
+        keywords: Dict[str, str],
+        tag_prefix: str,
+        verbose: bool,
 ) -> Dict[str, Any]:
     """Get version information from git keywords."""
     if "refnames" not in keywords:
@@ -223,9 +224,9 @@ def git_versions_from_keywords(
         # "stabilization", as well as "HEAD" and "master".
         tags = {r for r in refs if re.search(r'\d', r)}
         if verbose:
-            print("discarding '%s', no digits" % ",".join(refs - tags))
+            print(("discarding '%s', no digits" % ",".join(refs - tags)))
     if verbose:
-        print("likely tags: %s" % ",".join(sorted(tags)))
+        print(("likely tags: %s" % ",".join(sorted(tags))))
     for ref in sorted(tags):
         # sorting will prefer e.g. "2.0" over "2.0rc1"
         if ref.startswith(tag_prefix):
@@ -236,7 +237,7 @@ def git_versions_from_keywords(
             if not re.match(r'\d', r):
                 continue
             if verbose:
-                print("picking %s" % r)
+                print(("picking %s" % r))
             return {"version": r,
                     "full-revisionid": keywords["full"].strip(),
                     "dirty": False, "error": None,
@@ -251,10 +252,10 @@ def git_versions_from_keywords(
 
 @register_vcs_handler("git", "pieces_from_vcs")
 def git_pieces_from_vcs(
-    tag_prefix: str,
-    root: str,
-    verbose: bool,
-    runner: Callable = run_command
+        tag_prefix: str,
+        root: str,
+        verbose: bool,
+        runner: Callable = run_command
 ) -> Dict[str, Any]:
     """Get version from 'git describe' in the root of the source tree.
 
@@ -277,7 +278,7 @@ def git_pieces_from_vcs(
                    hide_stderr=not verbose)
     if rc != 0:
         if verbose:
-            print("Directory %s not under git control" % root)
+            print(("Directory %s not under git control" % root))
         raise NotThisMethod("'git rev-parse --git-dir' returned error")
 
     # if there is a tag matching tag_prefix, this yields TAG-NUM-gHEX[-dirty]
@@ -359,7 +360,7 @@ def git_pieces_from_vcs(
         if not full_tag.startswith(tag_prefix):
             if verbose:
                 fmt = "tag '%s' doesn't start with prefix '%s'"
-                print(fmt % (full_tag, tag_prefix))
+                print((fmt % (full_tag, tag_prefix)))
             pieces["error"] = ("tag '%s' doesn't start with prefix '%s'"
                                % (full_tag, tag_prefix))
             return pieces
